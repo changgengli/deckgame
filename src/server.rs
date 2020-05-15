@@ -94,35 +94,9 @@ async fn user_connected(ws: WebSocket, hall: Hall) {
     user_disconnected(session).await;
 }
 
-fn send_bad_message ( tx: &TX, message: String )-> bool{
-    match 
-    tx.send(Ok(Message::text(
-        serde_json::to_string(&message::Response::BadMessage{message: message}).unwrap(),
-    ))) {
-        Result::Err(e) => {
-            print!("{:?} ", e);
-            false 
-        },
-        _ => true,
-    }
-}
-
-fn send_message (tx: &TX, message: &message::Response) -> bool {
-    match 
-    tx.send(Ok(Message::text(
-        serde_json::to_string(&message).unwrap(),
-    ))) {
-        Result::Err(e) => {
-            print!("{:?} ", e);
-            false 
-        },
-        _ => true,
-    }
-}
-
 async fn user_message(
     msg: Message,
-    mut session: Session,
+    session: Session,
     tx: &TX,
 ) -> bool {
     // Skip any non-Text messages...
@@ -143,7 +117,10 @@ async fn user_message(
             if session.game.is_none() {
                 return send_bad_message( &tx, "Play not in a game".to_owned());
             }
-            let game = session.game.as_ref().unwrap();        
+
+            let game = session.game.as_ref().unwrap();
+    
+            game.write().await.remove_player(session.player.unwrap());
          },
          Result::Ok(message::Request::CreateGame{total_decks:total_decks, total_players:total_players, cards_to_reserve: cards_to_reserve  }) => {
             if session.player.is_none() {
@@ -210,8 +187,8 @@ async fn user_message(
             ))).unwrap();
         }
     };
-    return true;
 
+    true
     // New message from this user, send it to everyone else (except same uid)...
     //
     // We use `retain` instead of a for loop so that we can reap any user that
@@ -227,9 +204,12 @@ async fn user_message(
     // }
 }
 
-async fn user_disconnected(mut session: Session) {
+async fn user_disconnected(session: Session) {
     eprintln!("player disconnected {:?}, {:?}",  session.game, session.player);
 
+    
+    
+    
     // Stream closed up, so remove from the user list
     // users.lock().await.remove(&my_id);
 }
@@ -256,4 +236,32 @@ pub async fn start_server() {
     warp::serve(hi.or(websocket).or(cors))
         .run(([127, 0, 0, 1], 3030))
         .await;
+}
+
+
+
+fn send_bad_message ( tx: &TX, message: String )-> bool{
+    match 
+    tx.send(Ok(Message::text(
+        serde_json::to_string(&message::Response::BadMessage{message: message}).unwrap(),
+    ))) {
+        Result::Err(e) => {
+            print!("{:?} ", e);
+            false 
+        },
+        _ => true,
+    }
+}
+
+fn send_message (tx: &TX, message: &message::Response) -> bool {
+    match 
+    tx.send(Ok(Message::text(
+        serde_json::to_string(&message).unwrap(),
+    ))) {
+        Result::Err(e) => {
+            print!("{:?} ", e);
+            false 
+        },
+        _ => true,
+    }
 }

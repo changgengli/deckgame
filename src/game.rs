@@ -206,16 +206,13 @@ impl Game {
         player: Arc<Player>,
         position: u8,
     ) -> error::Result<()> {
-
         if let Some(existing_player) = self.players.get(usize::from(position)) {
             // if let Some(occupied) = existing_player {
             //     if !occupied.can_be_replaced(&player) {
             //         return Result::Err(error::GameError::PositionOccupied(position));
             //     }
             // }
-
             self.players[usize::from(position)] = Some(player);
-
             return Result::Ok(());
         }
 
@@ -256,13 +253,18 @@ impl Game {
             }
         }).unwrap()
     }
-}
-pub type GameInHall = Arc<RwLock<Game>>;
 
+    pub fn remove_player(&mut self, player: &Arc<Player>) {
+        self.players.iter_mut().try_find(|&p| p.as_ref().unwrap() == player).unwrap().take();
+        
+    }
+    
+}
+
+pub type GameInHall = Arc<RwLock<Game>>;
 pub struct Hall {
     players: HashMap<String, Arc<Player>>,
     games: HashMap<u32, GameInHall>,
-
 }
 
 impl Hall{
@@ -272,11 +274,6 @@ impl Hall{
             games: HashMap::new(),
         }
     }
-    
-    // pub fn get_game_mut(&self, game_id: u32) -> Option<&mut GameInHall> {
-
-    //     return self.games.get_mut(&game_id);
-    // }
     pub fn get_game(& self, game_id: u32) -> Option<GameInHall> {
 
         return self.games.get(&game_id).cloned();
@@ -284,12 +281,15 @@ impl Hall{
     pub fn add_player(&mut self, player: Arc<Player>){
         self.players.insert(player.id.clone(), player);
     }
+
     pub fn remove_player(&mut self, id: &String) {
         self.players.remove(id);
     }
+    
     pub fn add_game(&mut self, game_id: u32,game: GameInHall){
         self.games.insert(game_id, game);
     }
+    
     pub fn remove_game(&mut self, id: u32){
         self.games.remove(&id);
     }
