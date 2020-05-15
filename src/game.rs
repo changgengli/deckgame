@@ -88,6 +88,7 @@ pub struct Game {
     total_decks: u8,
     cards_in_reserve_pile: u8,
     pile_to_cards: HashMap<Pile, Vec<Card>>,
+    current_players: u8,
 }
 
 
@@ -114,6 +115,9 @@ fn shuffle(cards: &mut Vec<Card>) {
 impl Game {
     pub fn get_game_id (&self) -> u32 {
         self.id
+    }
+    pub fn get_current_players(&self) -> u8 {
+        self.current_players
     }
     pub fn new(total_players: u8, total_decks: u8, cards_in_reserve_pile: u8) -> Game {
         let mut all_cards: Vec<Card> = (0..4).flat_map(|_x| Card::generate_deck(true)).collect();
@@ -145,6 +149,7 @@ impl Game {
             total_players: total_players,
             cards_in_reserve_pile: cards_in_reserve_pile,
             pile_to_cards: piles_to_cards,
+            current_players: 0,
         }
     }
 
@@ -207,12 +212,12 @@ impl Game {
         position: u8,
     ) -> error::Result<()> {
         if let Some(existing_player) = self.players.get(usize::from(position)) {
-            // if let Some(occupied) = existing_player {
-            //     if !occupied.can_be_replaced(&player) {
-            //         return Result::Err(error::GameError::PositionOccupied(position));
-            //     }
-            // }
+            if  existing_player.is_some() {
+                    return Result::Err(error::GameError::PositionOccupied(position));
+            }
             self.players[usize::from(position)] = Some(player);
+
+            self.current_players += 1;
             return Result::Ok(());
         }
 
