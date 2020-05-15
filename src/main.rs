@@ -3,6 +3,7 @@ mod card;
 mod game;
 mod server;
 mod error;
+mod message;
 
 #[tokio::main]
 

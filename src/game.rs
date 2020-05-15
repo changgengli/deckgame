@@ -4,6 +4,15 @@ use rand::prelude::*;
 use rand::seq::SliceRandom;
 use std::collections::HashMap;
 use std::mem;
+use std::rc::Rc;
+use std::sync::{
+    atomic::{AtomicUsize, Ordering},
+    Arc,
+};
+
+use tokio::sync::{mpsc, Mutex, RwLock};
+
+use warp::ws::{Message, WebSocket};
 
 pub enum GameState {
     WaitingForPlayer,
@@ -13,17 +22,20 @@ pub enum GameState {
     Playing,
     PlayingEnd,
 }
+type TX = mpsc::UnboundedSender<Result<Message, warp::Error>>;
 
-#[derive(Debug, Eq, PartialEq, Clone, Ord, PartialOrd, Hash)]
+#[derive(Debug)]
 pub struct Player {
-    id: String,
-    password: String,
-    index: u8,
+    pub id: String,
+    pub password: String,
+    pub tx: TX,
+
 }
 impl Player {
     pub fn can_be_replaced(&self, another: &Player) -> bool {
         return self.id == another.id && self.password == another.password;
     }
+
 }
 
 pub enum PlayerState {
@@ -71,10 +83,10 @@ pub enum PlayerAction {
 #[derive(Debug)]
 pub struct Game {
     id: u32,
-    players: Vec<Option<Player>>,
-    total_player: u8,
+    players: Vec<Option<Arc<Player>>>,
+    total_players: u8,
     total_decks: u8,
-    card_in_reserve_pile: u8,
+    cards_in_reserve_pile: u8,
     pile_to_cards: HashMap<Pile, Vec<Card>>,
 }
 
@@ -82,10 +94,10 @@ pub struct Game {
 #[derive(Debug)]
 pub struct GameForPlayer<'a> {
     id: &'a u32,
-    players: &'a Vec<Option<Player>>,
-    total_player: &'a u8,
+    players: &'a Vec<Option<Arc<Player>>>,
+    total_players: &'a u8,
     total_decks: &'a u8,
-    card_in_reserve_pile: &'a u8,
+    cards_in_reserve_pile: &'a u8,
     pile_to_cards: HashMap<&'a Pile, &'a Vec<Card>>,
 }
 
@@ -100,14 +112,17 @@ fn shuffle(cards: &mut Vec<Card>) {
 }
 
 impl Game {
-    pub fn new(total_player: u8, total_decks: u8, card_in_reserve_pile: u8) -> Game {
+    pub fn get_game_id (&self) -> u32 {
+        self.id
+    }
+    pub fn new(total_players: u8, total_decks: u8, cards_in_reserve_pile: u8) -> Game {
         let mut all_cards: Vec<Card> = (0..4).flat_map(|_x| Card::generate_deck(true)).collect();
         shuffle(&mut all_cards);
 
         let mut piles_to_cards: HashMap<Pile, Vec<Card>> = HashMap::new();
         {
             let mut draw_cards: Vec<Card> = Vec::new();
-            (0..total_decks * 54 - card_in_reserve_pile).for_each(|_x| {
+            (0..total_decks * 54 - cards_in_reserve_pile).for_each(|_x| {
                 draw_cards.push(all_cards.pop().unwrap());
             });
             piles_to_cards.insert(Pile::DrawPile, draw_cards);
@@ -115,7 +130,7 @@ impl Game {
             piles_to_cards.insert(Pile::VisibleBuryPile, Vec::new());
             piles_to_cards.insert(Pile::SharedScorePile, Vec::new());
         }
-        (0..total_player).for_each(|player| {
+        (0..total_players).for_each(|player| {
             piles_to_cards.insert(Pile::Hand(player), Vec::new());
             piles_to_cards.insert(Pile::DiscardPile(player), Vec::new());
             piles_to_cards.insert(Pile::ClaimPile(player), Vec::new());
@@ -125,10 +140,10 @@ impl Game {
 
         Game {
             id: gen_game_id(),
-            players: (0..total_player).map(|_x| Option::None).collect(),
+            players: (0..total_players).map(|_x| Option::None).collect(),
             total_decks: total_decks,
-            total_player: total_player,
-            card_in_reserve_pile: card_in_reserve_pile,
+            total_players: total_players,
+            cards_in_reserve_pile: cards_in_reserve_pile,
             pile_to_cards: piles_to_cards,
         }
     }
@@ -156,9 +171,9 @@ impl Game {
         GameForPlayer {
             id: &self.id,
             players: &self.players,
-            total_player: &self.total_player,
+            total_players: &self.total_players,
             total_decks: &self.total_decks,
-            card_in_reserve_pile: &self.card_in_reserve_pile,
+            cards_in_reserve_pile: &self.cards_in_reserve_pile,
             pile_to_cards: piles_to_card,
         }
     }
@@ -186,19 +201,18 @@ impl Game {
         Result::Ok(())
     }
 
-    pub fn handle_player_join_action(
-        mut self,
-        player: Player,
-        action: PlayerAction,
+    pub fn player_join(
+        &mut self,
+        player: Arc<Player>,
+        position: u8,
     ) -> error::Result<()> {
-        let position = player.index;
 
         if let Some(existing_player) = self.players.get(usize::from(position)) {
-            if let Some(occupied) = existing_player {
-                if !occupied.can_be_replaced(&player) {
-                    return Result::Err(error::GameError::PositionOccupied(position));
-                }
-            }
+            // if let Some(occupied) = existing_player {
+            //     if !occupied.can_be_replaced(&player) {
+            //         return Result::Err(error::GameError::PositionOccupied(position));
+            //     }
+            // }
 
             self.players[usize::from(position)] = Some(player);
 
@@ -218,8 +232,8 @@ impl Game {
         match action {
             Move(card, from, to) => {
                 // valid if the player is in game
-
-                if from.allow_player(player.index) && to.allow_player(player.index) {
+                let position = self.get_player_position(&player) as u8;
+                if from.allow_player(position) && to.allow_player(position) {
                     self.move_card(from, to, card);
                     Result::Ok(())
                 } else {
@@ -230,38 +244,55 @@ impl Game {
             _ => Result::Err(error::GameError::InvalidPlayerCommand(action)),
         }
     }
-}
 
-struct Hall {
-    players: HashMap<String, Player>,
-    games: HashMap<usize, Game>,
+    fn get_player_position(&self, player: &Player) -> usize{
+        self.players.iter().position( |e| {
+
+            match e {
+                Some(p) => 
+                    p.id == player.id
+                ,
+                None => false,
+            }
+        }).unwrap()
+    }
+}
+pub type GameInHall = Arc<RwLock<Game>>;
+
+pub struct Hall {
+    players: HashMap<String, Arc<Player>>,
+    games: HashMap<u32, GameInHall>,
 
 }
 
 impl Hall{
-    pub fn new_game() {
-
-    }
-
-    fn login(&mut self,  id: String, password: String) -> error::Result<()>{
-        // if self.players.contains_key(&username) {
-        //     let existing_player =
-        //     return Result::Err("Duplicat")
-        // }
-    
-        let id_copy = id.clone();
-        let player = Player{
-            id: id,
-            password: password,
-            index: 0,
-        };
-        
-        self.players.insert(id_copy, player);
-        Result::Ok(())
-
+    pub fn new () -> Hall {
+        Hall {
+            players: HashMap::new(),
+            games: HashMap::new(),
+        }
     }
     
-    
+    // pub fn get_game_mut(&self, game_id: u32) -> Option<&mut GameInHall> {
+
+    //     return self.games.get_mut(&game_id);
+    // }
+    pub fn get_game(& self, game_id: u32) -> Option<GameInHall> {
+
+        return self.games.get(&game_id).cloned();
+    }
+    pub fn add_player(&mut self, player: Arc<Player>){
+        self.players.insert(player.id.clone(), player);
+    }
+    pub fn remove_player(&mut self, id: &String) {
+        self.players.remove(id);
+    }
+    pub fn add_game(&mut self, game_id: u32,game: GameInHall){
+        self.games.insert(game_id, game);
+    }
+    pub fn remove_game(&mut self, id: u32){
+        self.games.remove(&id);
+    }
 }
 #[cfg(test)]
 mod tests {
