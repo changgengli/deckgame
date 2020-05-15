@@ -255,8 +255,9 @@ impl Game {
     }
 
     pub fn remove_player(&mut self, player: &Arc<Player>) {
-        self.players.iter_mut().try_find(|&p| p.as_ref().unwrap() == player).unwrap().take();
+        let position = self.get_player_position(player);
         
+        self.players.get_mut(position).take();
     }
     
 }

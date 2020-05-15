@@ -37,7 +37,7 @@ struct Session {
     hall: Hall,
     player: Option<Arc<Player>>,
     game: Option<Game>,
-    position: Arc<u8>,
+    // position: Arc<u8>,
 }
 
 async fn user_connected(ws: WebSocket, hall: Hall) {
@@ -74,7 +74,7 @@ async fn user_connected(ws: WebSocket, hall: Hall) {
         hall: hall,
         player: Option::None,
         game: Option::None,
-        position:Arc::new(0),
+        // position:Arc::new(0),
     };
 
     while let Some(result) = user_ws_rx.next().await {
@@ -96,7 +96,7 @@ async fn user_connected(ws: WebSocket, hall: Hall) {
 
 async fn user_message(
     msg: Message,
-    session: Session,
+    mut session: Session,
     tx: &TX,
 ) -> bool {
     // Skip any non-Text messages...
@@ -120,7 +120,7 @@ async fn user_message(
 
             let game = session.game.as_ref().unwrap();
     
-            game.write().await.remove_player(session.player.unwrap());
+            game.write().await.remove_player(&session.player.unwrap());
          },
          Result::Ok(message::Request::CreateGame{total_decks:total_decks, total_players:total_players, cards_to_reserve: cards_to_reserve  }) => {
             if session.player.is_none() {
@@ -130,7 +130,7 @@ async fn user_message(
             let mut game = game::Game::new(total_players, total_decks, cards_to_reserve);
             game.player_join(session.player.unwrap().clone(), 0);
             let game_id = game.get_game_id();
-            session.game=Option::Some(Arc::new(RwLock::new( game)));
+            session.game.replace(Arc::new(RwLock::new( game)));
 
             session.hall.write().await.add_game(game_id, session.game.as_ref().unwrap().clone());
             return send_message(&tx, &message::Response::Pong);
@@ -142,7 +142,7 @@ async fn user_message(
                 password: password,
                 tx: tx.clone(),
             }); 
-            session.player = Some(player.clone());
+            session.player.replace(player.clone());
             let h= session.hall.write().await.add_player(player);
             
             tx.send(Ok(Message::text(
@@ -156,7 +156,7 @@ async fn user_message(
             }
 
             
-            session.position = Arc::new(position);
+            // session.position= Arc::new(position);
 
             match session.hall.read().await.get_game(game_id) {
                 Some(game) => {
