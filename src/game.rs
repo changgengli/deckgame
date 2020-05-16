@@ -2,17 +2,14 @@ use crate::card::Card;
 use crate::error;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
+use std::collections::hash_map::Iter;
 use std::collections::HashMap;
-use std::mem;
-use std::rc::Rc;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
-};
 
-use tokio::sync::{mpsc, Mutex, RwLock};
+use std::sync::Arc;
 
-use warp::ws::{Message, WebSocket};
+use tokio::sync::{mpsc, RwLock};
+
+use warp::ws::Message;
 
 pub enum GameState {
     WaitingForPlayer,
@@ -29,13 +26,11 @@ pub struct Player {
     pub id: String,
     pub password: String,
     pub tx: TX,
-
 }
 impl Player {
     pub fn can_be_replaced(&self, another: &Player) -> bool {
         return self.id == another.id && self.password == another.password;
     }
-
 }
 
 pub enum PlayerState {
@@ -73,8 +68,8 @@ impl Pile {
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum PlayerAction {
-    Login(String,String),
-    NewGame(u8, u8, u8), 
+    Login(String, String),
+    NewGame(u8, u8, u8),
     Enter(u8),              // game id
     Join(),                 //position
     Move(Card, Pile, Pile), // Card, from, to,
@@ -90,7 +85,6 @@ pub struct Game {
     pile_to_cards: HashMap<Pile, Vec<Card>>,
     current_players: u8,
 }
-
 
 #[derive(Debug)]
 pub struct GameForPlayer<'a> {
@@ -113,7 +107,13 @@ fn shuffle(cards: &mut Vec<Card>) {
 }
 
 impl Game {
-    pub fn get_game_id (&self) -> u32 {
+    pub fn get_list_of_players_id(&self) -> Vec<Option<String>> {
+        self.players
+            .iter()
+            .map(|p| p.as_ref().map(|pp| pp.id.clone()))
+            .collect()
+    }
+    pub fn get_game_id(&self) -> u32 {
         self.id
     }
     pub fn get_current_players(&self) -> u8 {
@@ -158,7 +158,7 @@ impl Game {
 
         self.pile_to_cards
             .iter()
-            .filter(|&(k, v)| match k {
+            .filter(|&(k, _v)| match k {
                 Pile::HiddenBuryPile(player) => *player == index,
                 Pile::VisibleBuryPile => true, // shared
                 Pile::SharedScorePile => true,
@@ -206,14 +206,10 @@ impl Game {
         Result::Ok(())
     }
 
-    pub fn player_join(
-        &mut self,
-        player: Arc<Player>,
-        position: u8,
-    ) -> error::Result<()> {
+    pub fn player_join(&mut self, player: Arc<Player>, position: u8) -> error::Result<()> {
         if let Some(existing_player) = self.players.get(usize::from(position)) {
-            if  existing_player.is_some() {
-                    return Result::Err(error::GameError::PositionOccupied(position));
+            if existing_player.is_some() {
+                return Result::Err(error::GameError::PositionOccupied(position));
             }
             self.players[usize::from(position)] = Some(player);
 
@@ -236,7 +232,7 @@ impl Game {
                 // valid if the player is in game
                 let position = self.get_player_position(&player) as u8;
                 if from.allow_player(position) && to.allow_player(position) {
-                    self.move_card(from, to, card);
+                    self.move_card(from, to, card).unwrap();
                     Result::Ok(())
                 } else {
                     Result::Err(error::GameError::NotAllowed)
@@ -247,57 +243,63 @@ impl Game {
         }
     }
 
-    fn get_player_position(&self, player: &Player) -> usize{
-        self.players.iter().position( |e| {
-
-            match e {
-                Some(p) => 
-                    p.id == player.id
-                ,
+    fn get_player_position(&self, player: &Player) -> usize {
+        self.players
+            .iter()
+            .position(|e| match e {
+                Some(p) => p.id == player.id,
                 None => false,
-            }
-        }).unwrap()
+            })
+            .unwrap()
     }
 
     pub fn remove_player(&mut self, player: &Arc<Player>) {
         let position = self.get_player_position(player);
-        
-        self.players.get_mut(position).take();
+        self.players.get_mut(position).unwrap().take();
+        self.current_players -= 1;
     }
-    
 }
 
 pub type GameInHall = Arc<RwLock<Game>>;
+#[derive(Debug)]
+
 pub struct Hall {
     players: HashMap<String, Arc<Player>>,
     games: HashMap<u32, GameInHall>,
 }
 
-impl Hall{
-    pub fn new () -> Hall {
+impl Hall {
+    pub fn new() -> Hall {
         Hall {
             players: HashMap::new(),
             games: HashMap::new(),
         }
     }
-    pub fn get_game(& self, game_id: u32) -> Option<GameInHall> {
-
+    pub fn get_game(&self, game_id: u32) -> Option<GameInHall> {
         return self.games.get(&game_id).cloned();
     }
-    pub fn add_player(&mut self, player: Arc<Player>){
+    pub fn add_player(&mut self, player: Arc<Player>) {
         self.players.insert(player.id.clone(), player);
     }
 
     pub fn remove_player(&mut self, id: &String) {
         self.players.remove(id);
     }
-    
-    pub fn add_game(&mut self, game_id: u32,game: GameInHall){
+
+    pub fn add_game(&mut self, game_id: u32, game: GameInHall) {
         self.games.insert(game_id, game);
     }
-    
-    pub fn remove_game(&mut self, id: u32){
+
+    pub fn remove_game(&mut self, id: u32) {
         self.games.remove(&id);
+    }
+
+    pub fn iter_games(&self) -> Iter<u32, GameInHall> {
+        self.games.iter()
+    }
+
+    pub fn iter_players(&self) -> Iter<String, Arc<Player>> {
+        self.players.iter()
     }
 }
 #[cfg(test)]
@@ -323,5 +325,25 @@ mod tests {
         .unwrap();
         println!("{:?}", game);
     }
-}
 
+    #[test]
+
+    fn test_remove_player_from_game() {
+        let mut game = Game::new(2, 1, 0);
+        let (tx, _rx) = mpsc::unbounded_channel();
+
+        let player = Arc::new(Player {
+            id: "aaa".to_owned(),
+            password: "bbb".to_owned(),
+            tx,
+        });
+
+        game.player_join(player.clone(), 0).unwrap();
+
+        println!("{:?}", game);
+        game.remove_player(&player);
+        println!("{:?}", game);
+        assert!(game.players.get(0).unwrap().is_none());
+        assert!(game.current_players == 0);
+    }
+}

@@ -1,4 +1,3 @@
-use std::fmt;
 mod card;
 mod game;
 mod server;
@@ -10,9 +9,6 @@ mod message;
 async fn main() {
     println!("Hello, world!");
 
-    let game = game::Game::new( 7,  3,  6);
-
-    println!("{:?}", &game);
     server::start_server().await;
 
 }
