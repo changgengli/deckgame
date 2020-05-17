@@ -1,6 +1,6 @@
 use std::error;
 use std::fmt;
-use crate::game::{Pile, PlayerAction};
+use crate::game::{Pile};
 use crate::card::Card;
 
 pub type Result<T> = std::result::Result<T, GameError>;
@@ -13,7 +13,6 @@ pub enum  GameError {
     InvalidCard(Card),
     InvalidPosition(u8),
     PositionOccupied(u8),
-    InvalidPlayerCommand(PlayerAction),
 }
 
 
