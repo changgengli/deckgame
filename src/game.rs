@@ -284,36 +284,6 @@ impl Game {
         }
     }
 
-    // pub fn gen_game_for_player<'a>(&'a self, index: u8) -> GameForPlayer {
-    //     let mut piles_to_card: HashMap<&Pile, &Vec<Card>> = HashMap::new();
-
-    //     self.pile_to_cards
-    //         .iter()
-    //         .filter(|&(k, _v)| match k {
-    //             Pile::HiddenBuryPile(player) => *player == index,
-    //             Pile::VisibleBuryPile => true, // shared
-    //             Pile::SharedScorePile => true,
-    //             Pile::Hand(player) => *player == index,
-    //             Pile::DiscardPile(_player) => true,
-    //             Pile::ScorePile(_player) => true,
-    //             Pile::ClaimPile(_player) => true,
-    //             Pile::DrawPile => false,
-    //             Pile::ReservedPile => false, //shared
-    //         })
-    //         .for_each(|(k, v)| {
-    //             piles_to_card.insert(&k, &v);
-    //         });
-
-    //     GameForPlayer {
-    //         id: &self.id,
-    //         players: &self.players,
-    //         total_players: &self.total_players,
-    //         total_decks: &self.total_decks,
-    //         cards_in_reserve_pile: &self.cards_in_reserve_pile,
-    //         pile_to_cards: piles_to_card,
-    //     }
-    // }
-
     fn move_card(&mut self, from: Pile, to: Pile, card: Card) -> error::Result<()> {
         if !self.pile_to_cards.contains_key(&from) {
             return Result::Err(error::GameError::InvalidPile(from));
@@ -380,6 +350,16 @@ impl Game {
             Some((&&card, _)) => Result::Err(error::GameError::InvalidCard(card)),
             None => Result::Ok(()),
         };
+    }
+    pub fn player_move_all_cards(&mut self, player: &Player, from: Pile, to: Pile) -> error::Result<()> {
+        let cards = {
+
+         self.pile_to_cards.get(&from).map(|k| k.clone())
+        };
+         match cards {
+            Some(cards) => self.player_move_cards(player, from, to, cards),
+            None =>  Result::Err(error::GameError::InvalidPile(from))
+        }
     }
     pub fn player_move_cards(
         &mut self,

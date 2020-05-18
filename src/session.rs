@@ -81,6 +81,16 @@ impl Session {
     }
 
     pub async fn login(&mut self, player: player::Player) {
+        let hall = self.hall.write().await;
+        if hall.has_player(&player.id) {
+            self.player
+                .as_ref()
+                .unwrap()
+                .send_message(&message::Response::BadMessage {
+                    message: "There is already a user in the game with this id".to_owned(),
+                });
+            return;
+        }
         let player = Arc::new(player);
         self.player.replace(player.clone());
         self.hall.write().await.add_player(player);
@@ -205,6 +215,20 @@ impl Session {
             source,
             destination,
             cards,
+        )
+        // Result::Ok(())
+    }
+    pub async fn
+
+    player_move_all_cards (
+        &mut self,
+        source: game::Pile,
+        destination: game::Pile,
+    ) -> error::Result<()> {
+        self.game.as_ref().unwrap().write().await.player_move_all_cards(
+            self.player.as_ref().unwrap(),
+            source,
+            destination,
         )
         // Result::Ok(())
     }

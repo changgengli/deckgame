@@ -1,0 +1,74 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+
+body {
+  background: -webkit-gradient(linear, 50% 0%, 50% 100, color-stop(100%, rgba(0, 0, 0, 0)), color-stop(100%, #fa8072));
+  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
+  background: -moz-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
+  background: -o-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
+  background: linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
+} 
+
+
+
+.card{
+  background-color: azure;
+  border:red 0.5px solid;
+  border-radius: 8px;
+}
+
+.card-highlight {
+  background-color: lightblue;
+}
+
+.hand-pile .card {
+  position: absolute;
+  width: 111px;
+  height: 162px;
+  border-radius: 8px;
+}
+
+.hand-pile .card-highlight {
+  top: -20px; 
+}
+
+.hand-pile {
+  position:relative;
+}

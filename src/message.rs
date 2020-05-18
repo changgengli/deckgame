@@ -32,6 +32,12 @@ pub enum Request {
         destination: game::Pile,
         cards: Vec<card::Card>,
     },
+
+    MoveAllCard {
+        source: game::Pile,
+        destination: game::Pile,
+        
+    }
 }
 
 #[derive(Serialize, Deserialize)]

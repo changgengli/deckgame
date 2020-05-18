@@ -1,11 +1,10 @@
-
-use crate::player::Player;
 use crate::game::Game;
+use crate::player::Player;
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
 use std::collections::hash_map::Iter;
 use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::sync::RwLock;
 
 pub type GameInHall = Arc<RwLock<Game>>;
 #[derive(Debug)]
@@ -47,5 +46,8 @@ impl Hall {
 
     pub fn iter_players(&self) -> Iter<String, Arc<Player>> {
         self.players.iter()
+    }
+    pub fn has_player(&self, id: &String) -> bool {
+        self.players.contains_key(id)
     }
 }
