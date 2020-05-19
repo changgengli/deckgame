@@ -47,7 +47,6 @@ interface IState {
 }
 
 
-
 export class RootComponent extends Component<GameProps, IState>  {
     constructor(props: GameProps) {
         super(props);
@@ -73,7 +72,7 @@ export class RootComponent extends Component<GameProps, IState>  {
 
                         {
                             gameId: 999,
-                            players: ["55", undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, undefined],
+                            players: ["55", undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, "aaa"],
                             totalPlayers: 9,
                             full: false,
                         }

@@ -8,13 +8,6 @@ export interface GameInHall {
     totalPlayers: number,
     full: boolean,
 }
-
-export interface HallProps {
-    games: GameInHall[],
-    messages: Message[],
-    myId: string,
-}
-
 const Messages: React.FunctionComponent<{ messages: Array<Message> }> =
     (props: { messages: Array<Message> }) => {
         const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -43,10 +36,9 @@ interface GamePlayerProps {
     totalPlayer: number;
     onSelect: (position: number) => void;
 }
+
 const GamePlayer: React.FunctionComponent<GamePlayerProps> = (props: GamePlayerProps) => {
-
     // compute top and left
-
     const radius = 120;
     const center = 151;
     const xCenter = Math.sin(2 * Math.PI / props.totalPlayer * props.postion) * radius + center;
@@ -77,6 +69,8 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (props: GamePlayerP
         {player}</div></div>;
 
 }
+
+// Game table in hall
 const GameTable: React.FunctionComponent<GameTableProps> = (props: GameTableProps) => {
     const [joining, setJoining] = useState(false);
     const [selectedPosition, setSelectedPosition] = useState<number | undefined>(undefined);
@@ -114,9 +108,21 @@ const GameTable: React.FunctionComponent<GameTableProps> = (props: GameTableProp
         </div>);
 
 }
+
+
+
+export interface HallProps {
+    games: GameInHall[],
+    messages: Message[],
+    myId: string,
+    //TODO action handler
+}
+
+
 const Hall: React.FunctionComponent<HallProps> = (props) => {
     let joinGame = function (game_id: number) {
         // props.myId;
+        // todo send message to server and enter the game UI.
     };
     return (
         <div className="hall">
