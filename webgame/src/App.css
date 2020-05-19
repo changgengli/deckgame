@@ -69,6 +69,41 @@ body {
   top: -20px; 
 }
 
+
 .hand-pile {
   position:relative;
+}
+
+
+.game-table {
+  position:relative;
+  width: 90px;
+  height: 90px;
+  background-image: url(/light-wood.jpg);
+  border-radius: 45px;
+}
+
+.game-table .top {
+  width: 90px;
+  height: 45px;
+  line-height: 50px;
+  border-bottom: lightsalmon 1px solid;
+  vertical-align: middle;
+  font-size: 24px;
+  color: blanchedalmond;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.game-table .bottom {
+  width: 90px;
+  height: 45px;
+  line-height: 35px;
+  font-size: 28px;
+  color: blanchedalmond;
+  font-weight: bold;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+.game-table .join-button {
+
 }

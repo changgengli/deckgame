@@ -1,7 +1,9 @@
 import React, { Component } from "react";
 import { useDrag } from 'react-dnd'
-import {Card} from './Card'
-import {Hand} from './Pile'
+import { Card } from './Card'
+import { Hand } from './Pile'
+import { Hall } from "./Hall";
+import { PlayerLogin, Message, PlayerJoinGame } from "./Message";
 
 
 // actions: 
@@ -59,11 +61,34 @@ export class RootComponent extends Component<GameProps, IState>  {
     }
 
     render() {
-        return <Hand
-            trumpColor={undefined} trumpNumber={undefined}
-            cards={Array.from(Array(54).keys())}
-            highlights={new Map([[0,true], [9,true]])}
-            onCardClick={(n) => console.log("selected " + n)} />;
+        let m = {
+
+            kind: 'PlayerLogin',
+            player: "aaaa",
+        } as PlayerLogin    ;
+        return (
+            <div>
+                <Hall
+                    myId="aaa" games={[
+
+                        {
+                            gameId: 999,
+                            players: ["55", undefined, undefined],
+                            totalPlayers: 3,
+                            full: false,
+                        }
+                    ]}
+                    messages={[m]}
+                />
+
+                <Hand
+                    trumpColor={undefined} trumpNumber={undefined}
+                    cards={Array.from(Array(54).keys())}
+                    highlights={new Map([[0, true], [9, true]])}
+                    onCardClick={(n) => console.log("selected " + n)} />;
+
+
+            </div>)
     }
 }
 
