@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { useDrag } from 'react-dnd'
 import { Card } from './Card'
 import { Hand } from './Pile'
-import { Hall } from "./Hall";
+import { Hall, LoginWindow } from "./Hall";
 import { PlayerLogin, Message, PlayerJoinGame } from "./Message";
 
 
@@ -50,7 +50,6 @@ interface IState {
 export class RootComponent extends Component<GameProps, IState>  {
     constructor(props: GameProps) {
         super(props);
-
         this.state = {
             articles: [
                 { title: "React Redux Tutorial for Beginners", id: 1 },
@@ -58,18 +57,24 @@ export class RootComponent extends Component<GameProps, IState>  {
             ]
         };
     }
-
     render() {
         let m = {
-
             kind: 'PlayerLogin',
             player: "aaaa",
         } as PlayerLogin    ;
         return (
             <div>
+                <LoginWindow loginHandler={x => alert(x)} errorMessage="test" /> 
+
                 <Hall
                     myId="aaa" games={[
 
+                        {
+                            gameId: 999,
+                            players: ["55", undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, "aaa"],
+                            totalPlayers: 9,
+                            full: false,
+                        },
                         {
                             gameId: 999,
                             players: ["55", undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, "aaa"],

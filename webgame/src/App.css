@@ -79,6 +79,8 @@ body {
   width: 302px;
   height: 302px; /* border */
   background-color: darkslategrey;
+  margin: 25px;
+  display: inline-block;
 }
 
 .game-table-outer .player{
@@ -105,12 +107,13 @@ body {
 }
 
 .game-table-outer .player-empty .avatar {
-
   height: 40px;
 }
+
 .game-table-outer .player.player-empty {
   cursor: pointer;
 }
+
 .game-table-outer .player.selected {
   border: 1px solid lightskyblue;
   cursor: default;

@@ -132,4 +132,19 @@ const Hall: React.FunctionComponent<HallProps> = (props) => {
             <Messages messages={props.messages} />
         </div>);
 }
-export { Hall };
+
+
+const LoginWindow: React.FunctionComponent<{ loginHandler: (id: string) => void, errorMessage: string | undefined }> =
+    ({ loginHandler, errorMessage }) => {
+
+        const [id, setId] = useState("");
+        return (
+            <div>
+                <div> <input type="text" value={id} placeholder="username" onChange={e => setId(e.target.value)} />
+                    <button onClick={() => loginHandler(id)}>Login</button>
+                </div>
+                {errorMessage ? <div>{errorMessage} </div> : null}
+            </div>
+        );
+    }
+export { Hall, LoginWindow };
