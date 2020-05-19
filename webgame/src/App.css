@@ -74,36 +74,105 @@ body {
   position:relative;
 }
 
+.game-table-outer {
+  position:relative;
+  width: 302px;
+  height: 302px; /* border */
+  background-color: darkslategrey;
+}
+
+.game-table-outer .player{
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  color: #61dafb;
+  border-radius: 1px;
+}
+
+.game-table-outer .player .name {
+  height: 15px;
+  font-size: 12px;
+  line-height: 12px;
+}
+.game-table-outer .player .avatar {
+    background-color: yellowgreen;
+    border-radius: 6px;
+    width: 40px;
+    height: 25px;
+    background-image: url(/player.png);
+    background-size: cover;
+    user-select: none
+}
+
+.game-table-outer .player-empty .avatar {
+
+  height: 40px;
+}
+.game-table-outer .player.player-empty {
+  cursor: pointer;
+}
+.game-table-outer .player.selected {
+  border: 1px solid lightskyblue;
+  cursor: default;
+  
+}
 
 .game-table {
-  position:relative;
-  width: 90px;
-  height: 90px;
+  position: absolute;
+  top: 75px;
+  left: 75px;
+  width: 150px;
+  height: 150px;
   background-image: url(/light-wood.jpg);
-  border-radius: 45px;
+  border-radius: 75px;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  box-shadow: 8px 5px 5px -5px rgba(0,0,0,0.51);
+  border-style: solid;
+  border-width: 0.5px;
 }
 
 .game-table .top {
-  width: 90px;
-  height: 45px;
-  line-height: 50px;
+  position: absolute;
+  width: 150px;
+  height: 75px;
+  line-height: 75px;
   border-bottom: lightsalmon 1px solid;
-  vertical-align: middle;
-  font-size: 24px;
   color: blanchedalmond;
   font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-size: 24px;
 }
 
 .game-table .bottom {
-  width: 90px;
-  height: 45px;
-  line-height: 35px;
+  position: absolute;
+  width: 150px;
+  height: 75px;
+  top: 75px;
+  left: 0px;
+  line-height: 50px;
+  vertical-align: top;
   font-size: 28px;
   color: blanchedalmond;
   font-weight: bold;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
 }
 
-.game-table .join-button {
+.game-table .join {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 150px;
+  height: 150px; 
+  padding-top: 60px;
+  padding-bottom: 50px;
+}
 
+
+.game-table .join-button {
+  border-radius: 6px;
+  height: 25px;
+  vertical-align: middle;
+  font-size: 10px;
+  color: aquamarine;
+  background-color: darkgrey;
+  padding-left: 10px;
+  padding-right: 10px;
 }

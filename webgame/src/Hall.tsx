@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState, MouseEvent } from 'react'
 import { ChatMessage, PlayerJoinGame, PlayerLogin, Message } from './Message';
 
 export interface GameInHall {
@@ -36,30 +36,81 @@ interface GameTableProps {
     onJoin: (gameId: number) => void,
 }
 
+interface GamePlayerProps {
+    player: string | undefined;
+    postion: number;
+    selectedIndex: number | undefined;
+    totalPlayer: number;
+    onSelect: (position: number) => void;
+}
+const GamePlayer: React.FunctionComponent<GamePlayerProps> = (props: GamePlayerProps) => {
+
+    // compute top and left
+
+    const radius = 120;
+    const center = 151;
+    const xCenter = Math.sin(2 * Math.PI / props.totalPlayer * props.postion) * radius + center;
+    const yCenter = Math.cos(2 * Math.PI / props.totalPlayer * props.postion) * radius + center;
+
+
+    const xSide = 40;
+    const ySide = 40;
+    const x = xCenter - xSide / 2;
+    const y = yCenter - ySide / 2;
+
+    const style = { top: x, left: y };
+    let className = "player";
+    let onClick = undefined;
+    let player = null;
+    if (props.selectedIndex === props.postion) {
+        className += " selected";
+    }
+
+    if (props.player === undefined) {
+        onClick = (event: MouseEvent<HTMLDivElement>) => props.onSelect(props.postion);
+        className += " player-empty";
+    } else {
+        player = props.player;
+    }
+
+    return <div className={className} style={style} onClick={onClick}><div className="avatar" /><div className="name">
+        {player}</div></div>;
+
+}
 const GameTable: React.FunctionComponent<GameTableProps> = (props: GameTableProps) => {
     const [joining, setJoining] = useState(false);
+    const [selectedPosition, setSelectedPosition] = useState<number | undefined>(undefined);
 
-        // if (props.game.totalPlayers === props.game.players.length) {
-        //     setJoining(false);
-        // }
+
+    let existingPlayers = props.game.players.filter(x => x).length;
+
 
     let clickJoining = function () {
         props.onJoin(props.game.gameId);
         setJoining(false);
     }
-    let join = props.game.players.filter(x=>x).length === props.game.totalPlayers ?null: <div className="join-button">
-        <button onClick={clickJoining}>Join</button>
-    </div> ;
+
+    let join = existingPlayers !== props.game.totalPlayers && selectedPosition !== undefined ? <div className="join">
+        <button onClick={clickJoining} className="join-button">Join</button>
+    </div> : null;
+
+    let onSelectPlayer = function (position: number) {
+        setSelectedPosition(position);
+    }
 
     return (
-        <div className="game-table">
-            <div className="top">
-                {props.game.players.filter(x=>x).length}
+        <div className="game-table-outer">
+            <div className="game-table">
+
+                <div className="top">
+                    {props.game.players.filter(x => x).length}
+                </div>
+                <div className="bottom">
+                    {props.game.totalPlayers}
+                </div>
+                {join}
             </div>
-            <div className="bottom">
-                {props.game.totalPlayers}
-            </div>
-            {join}
+            {props.game.players.map((p, i) => <GamePlayer player={p} postion={i} selectedIndex={selectedPosition} totalPlayer={props.game.players.length} onSelect={onSelectPlayer} />)}
         </div>);
 
 }

@@ -73,8 +73,8 @@ export class RootComponent extends Component<GameProps, IState>  {
 
                         {
                             gameId: 999,
-                            players: ["55", undefined, undefined],
-                            totalPlayers: 3,
+                            players: ["55", undefined, undefined, undefined, undefined, undefined, undefined, undefined,  undefined, undefined],
+                            totalPlayers: 9,
                             full: false,
                         }
                     ]}
