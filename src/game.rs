@@ -439,6 +439,7 @@ mod tests {
     fn test_move_card() {
         let mut game = Game::new(2, 1, 0);
         println!("{:?}", game);
+        game.shuffle();
         game.move_card(
             Pile::DrawPile,
             Pile::Hand(0),
