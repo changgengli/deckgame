@@ -31,10 +31,10 @@ interface DiscardPileProps {
 const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
     let cards = props.cards.map(a => {
         let row = a.map(
-        (c, i) => <Card fullSize={false} value={c} index={i} highlight={props.highlights.get(i) || false} onClick={props.onCardClick}
+            (c, i) => <Card fullSize={false} value={c} index={i} highlight={props.highlights.get(i) || false} onClick={props.onCardClick}
 
-            nonOverLap={0}
-        />);
+                nonOverLap={0}
+            />);
         return <div className="pile-row"> {row}</div>;
     });
 
@@ -54,4 +54,4 @@ const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
             VisibleBuryPile => "visible_bury_pile".to_owned(),
             SharedScorePile => "shared_score_pile".to_owned(),/
 */
-export  {Hand} 
+export { Hand } 
