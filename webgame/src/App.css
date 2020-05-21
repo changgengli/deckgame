@@ -108,6 +108,7 @@ body {
 
 .game-table-outer .player-empty .avatar {
   height: 40px;
+  opacity: 30%;
 }
 
 .game-table-outer .player.player-empty {
