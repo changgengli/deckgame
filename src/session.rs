@@ -81,7 +81,7 @@ impl Session {
     }
 
     pub async fn login(&mut self, player: player::Player) {
-        let hall = self.hall.write().await;
+        let mut hall = self.hall.write().await;
         if hall.has_player(&player.id) {
             self.player
                 .as_ref()
@@ -93,7 +93,7 @@ impl Session {
         }
         let player = Arc::new(player);
         self.player.replace(player.clone());
-        self.hall.write().await.add_player(player);
+        hall.add_player(player);
     }
 
     pub async fn player_join_game(&mut self, game_id: u32, position: u8) -> bool {
