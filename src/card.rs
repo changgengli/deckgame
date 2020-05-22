@@ -1,10 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-
-
-
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash, Serialize, Deserialize)]
 pub struct Card {
     value: u8,
 }
@@ -14,8 +10,6 @@ impl Card {
             true => 53,
             false => 51,
         };
-        (0..cards)
-            .map(|y: u8| Card{value:y})
-            .collect()
+        (0..cards).map(|y: u8| Card { value: y }).collect()
     }
 }

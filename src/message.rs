@@ -36,8 +36,7 @@ pub enum Request {
     MoveAllCard {
         source: game::Pile,
         destination: game::Pile,
-        
-    }
+    },
 }
 
 #[derive(Serialize, Deserialize)]
@@ -77,10 +76,9 @@ pub enum Response {
 
     FullGame {
         game: Game,
-        card_counts:HashMap<game::Pile, u16>, 
-        piles_cards: HashMap<game::Pile, Vec<card::Card>>
-    
-    }
+        card_counts: HashMap<game::Pile, u16>,
+        piles_cards: HashMap<game::Pile, Vec<card::Card>>,
+    },
 }
 
 #[derive(Serialize, Deserialize)]

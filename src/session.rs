@@ -83,16 +83,15 @@ impl Session {
     pub async fn login(&mut self, player: player::Player) -> bool {
         let mut hall = self.hall.write().await;
         if hall.has_player(&player.id) {
-            return player
-                .send_message(&message::Response::BadMessage {
-                    message: "There is already a user in the game with this id".to_owned(),
-                });
+            return player.send_message(&message::Response::BadMessage {
+                message: "There is already a user in the game with this id".to_owned(),
+            });
         }
         let player = Arc::new(player);
         self.player.replace(player.clone());
         hall.add_player(player.clone());
-        player.send_message( &message::Response::LoginSuccess{
-            id: player.id.clone()
+        player.send_message(&message::Response::LoginSuccess {
+            id: player.id.clone(),
         })
     }
 
@@ -218,18 +217,17 @@ impl Session {
         )
         // Result::Ok(())
     }
-    pub async fn
-
-    player_move_all_cards (
+    pub async fn player_move_all_cards(
         &mut self,
         source: game::Pile,
         destination: game::Pile,
     ) -> error::Result<()> {
-        self.game.as_ref().unwrap().write().await.player_move_all_cards(
-            self.player.as_ref().unwrap(),
-            source,
-            destination,
-        )
+        self.game
+            .as_ref()
+            .unwrap()
+            .write()
+            .await
+            .player_move_all_cards(self.player.as_ref().unwrap(), source, destination)
         // Result::Ok(())
     }
 }

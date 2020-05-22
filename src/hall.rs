@@ -47,6 +47,7 @@ impl Hall {
     pub fn iter_players(&self) -> Iter<String, Arc<Player>> {
         self.players.iter()
     }
+
     pub fn has_player(&self, id: &String) -> bool {
         self.players.contains_key(id)
     }

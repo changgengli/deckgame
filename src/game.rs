@@ -178,11 +178,11 @@ impl Game {
                     .for_each(|(i, p)| match p.as_ref() {
                         Some(p) => {
                             p.send_message(if i as u8 == self.deal_index {
-                            &move_card_message
-                        } else {
-                            &hidden_move_card_message
-                        });
-                    }
+                                &move_card_message
+                            } else {
+                                &hidden_move_card_message
+                            });
+                        }
 
                         _ => (),
                     });
@@ -354,14 +354,16 @@ impl Game {
             None => Result::Ok(()),
         };
     }
-    pub fn player_move_all_cards(&mut self, player: &Player, from: Pile, to: Pile) -> error::Result<()> {
-        let cards = {
-
-         self.pile_to_cards.get(&from).map(|k| k.clone())
-        };
-         match cards {
+    pub fn player_move_all_cards(
+        &mut self,
+        player: &Player,
+        from: Pile,
+        to: Pile,
+    ) -> error::Result<()> {
+        let cards = { self.pile_to_cards.get(&from).map(|k| k.clone()) };
+        match cards {
             Some(cards) => self.player_move_cards(player, from, to, cards),
-            None =>  Result::Err(error::GameError::InvalidPile(from))
+            None => Result::Err(error::GameError::InvalidPile(from)),
         }
     }
     pub fn player_move_cards(
@@ -402,8 +404,9 @@ impl Game {
         }
 
         self.players.iter().for_each(|p| match p.as_ref() {
-            Some(other) if other.id != player.id =>
-            { other.send_message(&move_card_message);}
+            Some(other) if other.id != player.id => {
+                other.send_message(&move_card_message);
+            }
             _ => (),
         });
         Result::Ok(())
