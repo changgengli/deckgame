@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, MouseEvent } from "react";
-import { ChatMessage, PlayerJoinGame, PlayerLogin, Message } from "./Message";
+import { PlayerLogin, Message } from "./Message";
 import { HallProps } from "./Types";
 import { connect } from "react-redux";
 import { State } from "./Store";
@@ -149,28 +149,6 @@ const HallPure: React.FunctionComponent<HallProps> = (props) => {
   );
 };
 
-const LoginWindow: React.FunctionComponent<{
-  loginHandler: (id: string) => void;
-  errorMessage: string | undefined;
-}> = ({ loginHandler, errorMessage }) => {
-  const [id, setId] = useState("");
-  return (
-    <div>
-      <div>
-        {" "}
-        <input
-          type="text"
-          value={id}
-          placeholder="username"
-          onChange={(e) => setId(e.target.value)}
-        />
-        <button onClick={() => loginHandler(id)}>Login</button>
-      </div>
-      {errorMessage ? <div>{errorMessage} </div> : null}
-    </div>
-  );
-};
-
 const mapStateToProps = (state: State /*, ownProps*/): HallProps => {
   return {
     myId: "aaa",
@@ -221,4 +199,3 @@ const mapStateToProps = (state: State /*, ownProps*/): HallProps => {
 
 const mapDispatchToProps = {};
 export const Hall = connect(mapStateToProps, mapDispatchToProps)(HallPure);
-export { LoginWindow };

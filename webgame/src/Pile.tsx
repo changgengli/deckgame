@@ -44,7 +44,6 @@ const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
     ));
     return <div className="pile-row"> {row}</div>;
   });
-
   return <div className="dicard-pile">{cards}</div>;
 };
 

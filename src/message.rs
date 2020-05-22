@@ -44,6 +44,9 @@ pub enum Request {
 #[serde(tag = "type")]
 pub enum Response {
     Pong,
+    LoginSuccess {
+        id: String,
+    },
     BadMessage {
         message: String,
     },

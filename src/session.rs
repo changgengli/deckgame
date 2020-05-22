@@ -80,20 +80,20 @@ impl Session {
         self.hall.write().await.add_game(game_id, game);
     }
 
-    pub async fn login(&mut self, player: player::Player) {
+    pub async fn login(&mut self, player: player::Player) -> bool {
         let mut hall = self.hall.write().await;
         if hall.has_player(&player.id) {
-            self.player
-                .as_ref()
-                .unwrap()
+            return player
                 .send_message(&message::Response::BadMessage {
                     message: "There is already a user in the game with this id".to_owned(),
                 });
-            return;
         }
         let player = Arc::new(player);
         self.player.replace(player.clone());
-        hall.add_player(player);
+        hall.add_player(player.clone());
+        player.send_message( &message::Response::LoginSuccess{
+            id: player.id.clone()
+        })
     }
 
     pub async fn player_join_game(&mut self, game_id: u32, position: u8) -> bool {

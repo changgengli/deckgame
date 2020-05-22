@@ -2,12 +2,14 @@ import React, { Component, useEffect } from "react";
 import { useDrag } from "react-dnd";
 import { Card } from "./Card";
 import { Hand } from "./Pile";
-import { Hall, LoginWindow } from "./Hall";
+import { Hall } from "./Hall";
 import { PlayerLogin, Message, PlayerJoinGame } from "./Message";
 import { Provider } from "react-redux";
 import { store } from "./Store";
 import { connect } from "@giantmachines/redux-websocket/dist";
 import Connection from "./components/Connection";
+import CurrentUser from "./components/CurrentUser";
+import LoginWindow from "./components/LoginWindow";
 
 interface GameState {
   selected_card_pile: string;
@@ -25,25 +27,22 @@ interface Hall {
   games: Map<number, Game>;
 }
 
-interface GameProps {}
+interface GameProps {
+  myId?: string | undefined;
+}
 
-interface IState {}
-
-class Root extends Component<GameProps, IState> {
+class Root extends Component<GameProps> {
   constructor(props: GameProps) {
     super(props);
-    this.state = {
-      articles: [
-        { title: "React Redux Tutorial for Beginners", id: 1 },
-        { title: "TypeScript tutorial for beginners", id: 2 },
-      ],
-    };
   }
   render() {
     return (
       <div>
-        <Connection />
-        <LoginWindow loginHandler={(x) => alert(x)} errorMessage="test" />
+        <div id="head">
+          <CurrentUser />
+          <Connection />
+        </div>
+        {this.props.myId ? null : <LoginWindow />}
         <Hall />
         <Hand
           trumpColor={undefined}

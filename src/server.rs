@@ -54,8 +54,7 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
                 password,
                 tx: tx.clone(),
             };
-            session.login(player).await;
-            send_message(&tx, &message::Response::Pong)
+            return session.login(player).await;
         }
         Result::Ok(message::Request::JoinGame { game_id, position }) => {
             if !session.is_login() {

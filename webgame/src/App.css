@@ -188,9 +188,10 @@ body {
 .connection-indicator {
   height: 15px;
   width: 15px;
-  background-color: #bbb;
+  background-color: salmon;
   border-radius: 50%;
-  display: inline-block;
+  float: right;
+  margin-right: 18px;
 }
 
 .connection-indicator.connected {
@@ -199,14 +200,30 @@ body {
 
 .connection-indicator.connecting {
   animation-name: connecting;
-  animation-duration: 0.5s;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
 }
 
 @keyframes connecting {
   from {
-    background-color: #bbb;
+    background-color: lightsalmon;
   }
   to {
-    background-color: green;
+    background-color: darkgrey;
   }
+}
+
+.current-user {
+  margin-left: 18px;
+  float: left;
+}
+
+.current-user.not-login {
+  opacity: 60%;
+  filter: grayscale(100%);
+}
+
+#head {
+  padding-top: 8px;
+  height: 20px;
 }

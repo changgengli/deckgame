@@ -176,11 +176,14 @@ impl Game {
                     .iter()
                     .enumerate()
                     .for_each(|(i, p)| match p.as_ref() {
-                        Some(p) => p.send_message(if i as u8 == self.deal_index {
+                        Some(p) => {
+                            p.send_message(if i as u8 == self.deal_index {
                             &move_card_message
                         } else {
                             &hidden_move_card_message
-                        }),
+                        });
+                    }
+
                         _ => (),
                     });
             }
@@ -399,7 +402,8 @@ impl Game {
         }
 
         self.players.iter().for_each(|p| match p.as_ref() {
-            Some(other) if other.id != player.id => other.send_message(&move_card_message),
+            Some(other) if other.id != player.id =>
+            { other.send_message(&move_card_message);}
             _ => (),
         });
         Result::Ok(())
@@ -414,7 +418,6 @@ impl Game {
             })
             .unwrap()
     }
-
     pub fn remove_player(&mut self, player: &Player) {
         let position = self.get_player_position(player);
         self.players.get_mut(position).unwrap().take();

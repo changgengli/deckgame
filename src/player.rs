@@ -13,13 +13,14 @@ pub struct Player {
     
 }
 impl Player {
-    pub fn send_message(&self, message: &Response) {
+    pub fn send_message(&self, message: &Response) -> bool{
         match self.tx.send(Ok(Message::text(serde_json::to_string(&message).unwrap()))) {
             Result::Err(e) => {
                 print!("{:?} ", e);
+                false
         
             }
-            _ => (),
+            _ => true,
         }
     }
 }
