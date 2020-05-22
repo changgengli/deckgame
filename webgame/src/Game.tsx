@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, { Component, useEffect } from "react";
 import { useDrag } from "react-dnd";
 import { Card } from "./Card";
 import { Hand } from "./Pile";
@@ -6,6 +6,8 @@ import { Hall, LoginWindow } from "./Hall";
 import { PlayerLogin, Message, PlayerJoinGame } from "./Message";
 import { Provider } from "react-redux";
 import { store } from "./Store";
+import { connect } from "@giantmachines/redux-websocket/dist";
+import Connection from "./components/Connection";
 
 interface GameState {
   selected_card_pile: string;
@@ -40,6 +42,7 @@ class Root extends Component<GameProps, IState> {
   render() {
     return (
       <div>
+        <Connection />
         <LoginWindow loginHandler={(x) => alert(x)} errorMessage="test" />
         <Hall />
         <Hand
@@ -61,9 +64,16 @@ class Root extends Component<GameProps, IState> {
 }
 
 export const RootComponent: React.FunctionComponent<{}> = (props) => {
+  var url = new URL("/websocket", window.location.href);
+
+  url.protocol = url.protocol.replace("http", "ws");
+
+  useEffect(() => {
+    store.dispatch(connect(url.href));
+  });
   return (
     <Provider store={store}>
-      <Hall />
+      <Root />
     </Provider>
   );
 };

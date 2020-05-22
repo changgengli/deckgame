@@ -37,20 +37,27 @@
   }
 }
 
-
 body {
-  background: -webkit-gradient(linear, 50% 0%, 50% 100, color-stop(100%, rgba(0, 0, 0, 0)), color-stop(100%, #fa8072));
-  background: -webkit-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
+  background: -webkit-gradient(
+    linear,
+    50% 0%,
+    50% 100,
+    color-stop(100%, rgba(0, 0, 0, 0)),
+    color-stop(100%, #fa8072)
+  );
+  background: -webkit-linear-gradient(
+    top,
+    rgba(0, 0, 0, 0) 100px,
+    #fa8072 100px
+  );
   background: -moz-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
   background: -o-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
   background: linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
-} 
+}
 
-
-
-.card{
+.card {
   background-color: azure;
-  border:red 0.5px solid;
+  border: red 0.5px solid;
   border-radius: 8px;
 }
 
@@ -66,16 +73,15 @@ body {
 }
 
 .hand-pile .card-highlight {
-  top: -20px; 
+  top: -20px;
 }
 
-
 .hand-pile {
-  position:relative;
+  position: relative;
 }
 
 .game-table-outer {
-  position:relative;
+  position: relative;
   width: 302px;
   height: 302px; /* border */
   background-color: darkslategrey;
@@ -83,7 +89,7 @@ body {
   display: inline-block;
 }
 
-.game-table-outer .player{
+.game-table-outer .player {
   position: absolute;
   width: 40px;
   height: 40px;
@@ -97,13 +103,13 @@ body {
   line-height: 12px;
 }
 .game-table-outer .player .avatar {
-    background-color: yellowgreen;
-    border-radius: 6px;
-    width: 40px;
-    height: 25px;
-    background-image: url(/player.png);
-    background-size: cover;
-    user-select: none
+  background-color: yellowgreen;
+  border-radius: 6px;
+  width: 40px;
+  height: 25px;
+  background-image: url(/player.png);
+  background-size: cover;
+  user-select: none;
 }
 
 .game-table-outer .player-empty .avatar {
@@ -118,7 +124,6 @@ body {
 .game-table-outer .player.selected {
   border: 1px solid lightskyblue;
   cursor: default;
-  
 }
 
 .game-table {
@@ -129,8 +134,8 @@ body {
   height: 150px;
   background-image: url(/light-wood.jpg);
   border-radius: 75px;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-  box-shadow: 8px 5px 5px -5px rgba(0,0,0,0.51);
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
+  box-shadow: 8px 5px 5px -5px rgba(0, 0, 0, 0.51);
   border-style: solid;
   border-width: 0.5px;
 }
@@ -142,7 +147,7 @@ body {
   line-height: 75px;
   border-bottom: lightsalmon 1px solid;
   color: blanchedalmond;
-  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   font-size: 24px;
 }
 
@@ -164,11 +169,10 @@ body {
   top: 0px;
   left: 0px;
   width: 150px;
-  height: 150px; 
+  height: 150px;
   padding-top: 60px;
   padding-bottom: 50px;
 }
-
 
 .game-table .join-button {
   border-radius: 6px;
@@ -179,4 +183,30 @@ body {
   background-color: darkgrey;
   padding-left: 10px;
   padding-right: 10px;
+}
+
+.connection-indicator {
+  height: 15px;
+  width: 15px;
+  background-color: #bbb;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.connection-indicator.connected {
+  background-color: green;
+}
+
+.connection-indicator.connecting {
+  animation-name: connecting;
+  animation-duration: 0.5s;
+}
+
+@keyframes connecting {
+  from {
+    background-color: #bbb;
+  }
+  to {
+    background-color: green;
+  }
 }

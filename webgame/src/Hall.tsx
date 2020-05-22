@@ -93,7 +93,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
 
   let existingPlayers = props.game.players.filter((x) => x).length;
 
-  let clickJoining = function() {
+  let clickJoining = function () {
     props.onJoin(props.game.gameId);
     setJoining(false);
   };
@@ -108,7 +108,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
       </div>
     ) : null;
 
-  let onSelectPlayer = function(position: number) {
+  let onSelectPlayer = function (position: number) {
     setSelectedPosition(position);
   };
 
@@ -133,7 +133,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
 };
 
 const HallPure: React.FunctionComponent<HallProps> = (props) => {
-  let joinGame = function(game_id: number) {
+  let joinGame = function (game_id: number) {
     // props.myId;
     // todo send message to server and enter the game UI.
   };
