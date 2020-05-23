@@ -116,6 +116,9 @@ fn shuffle(cards: &mut Vec<Card>) {
 }
 
 impl Game {
+    pub fn id(&self) -> u32 {
+        self.id
+    }
     pub fn build_message_for_player(&self, player: &Player) -> crate::message::Response {
         let position = self.get_player_position(player) as u8;
         let card_counts = self
@@ -316,9 +319,14 @@ impl Game {
             if existing_player.is_some() {
                 return Result::Err(error::GameError::PositionOccupied(position));
             }
-            self.players[usize::from(position)] = Some(player);
+            self.players[usize::from(position)] = Some(player.clone());
 
             self.current_players += 1;
+            self.broadcast_game();
+            player.send_message(&PlayerJoinedGame {
+                player: player.id.clone(),
+                game_id: self.id,
+            });
             return Result::Ok(());
         }
 
@@ -421,11 +429,29 @@ impl Game {
             })
             .unwrap()
     }
+    fn broadcast_game(&self) {
+        let message = GameInHall {
+            id: self.id,
+            players: self
+                .players
+                .iter()
+                .map(|p| p.as_ref().map(|a| a.id.clone()))
+                .collect(),
+        };
+        self.players.iter().filter(|&p| p.is_some()).for_each(|p| {
+            p.as_ref().unwrap().send_message(&message);
+        });
+    }
     pub fn remove_player(&mut self, player: &Player) {
         let position = self.get_player_position(player);
         self.players.get_mut(position).unwrap().take();
         self.current_players -= 1;
         *self.players_ready.get_mut(position).unwrap() = false;
+        self.broadcast_game();
+        player.send_message(&PlayerLeftGame {
+            player: player.id.clone(),
+            game_id: self.id.clone(),
+        });
     }
 }
 

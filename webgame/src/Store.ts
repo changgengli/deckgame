@@ -90,16 +90,23 @@ const rootReducer = (
   action: any
 ): State => {
   console.log("root reducer", action);
+  let myId;
   switch (action.type) {
-    case "REDUX_WEBSOCKET::OPEN":
-    case "REDUX_WEBSOCKET::CONNECT":
     case "REDUX_WEBSOCKET::BROKEN":
     case "REDUX_WEBSOCKET::CLOSED":
-      let connection = connectionReducer(state.connection, action);
+      myId = undefined;
       return {
         ...state,
-        connection,
+        connection: connectionReducer(state.connection, action),
+        myId,
       };
+    case "REDUX_WEBSOCKET::OPEN":
+    case "REDUX_WEBSOCKET::CONNECT":
+      return {
+        ...state,
+        connection: connectionReducer(state.connection, action),
+      };
+
     case "REDUX_WEBSOCKET::MESSAGE":
       return {
         ...message(state, action),

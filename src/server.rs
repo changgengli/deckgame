@@ -32,8 +32,7 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
             if !session.is_in_game() {
                 return send_bad_message(&tx, "Player not in a game".to_owned());
             }
-            session.leave_game().await;
-            send_message(&tx, &message::Response::Pong)
+            session.leave_game().await
         }
         Result::Ok(message::Request::CreateGame {
             total_decks,
@@ -43,9 +42,32 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
             if !session.is_login() {
                 return send_bad_message(&tx, "Not yet login".to_string());
             }
+
+            if session.is_in_game() {
+                return send_bad_message(&tx, "Already in a game".to_string());
+            }
+
+            if total_decks > 6 || total_decks < 1 {
+                return send_bad_message(
+                    &tx,
+                    "Too many or few decks are not supported".to_string(),
+                );
+            }
+            if total_players > 12 || total_players < 1 {
+                return send_bad_message(
+                    &tx,
+                    "too many or few players are not supported".to_string(),
+                );
+            }
+
+            if cards_to_reserve < 0 || cards_to_reserve > 50 {
+                return send_bad_message(
+                    &tx,
+                    "too many or few cards to reserve are not supported".to_string(),
+                );
+            }
             let game = game::Game::new(total_players, total_decks, cards_to_reserve);
-            session.create_game(game).await;
-            send_message(&tx, &message::Response::Pong)
+            session.create_game(game).await
         }
 
         Result::Ok(message::Request::Login { id, password }) => {
@@ -60,6 +82,11 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
             if !session.is_login() {
                 return send_bad_message(&tx, "Not yet login".to_string());
             }
+
+            if session.is_in_game() {
+                return send_bad_message(&tx, "Already in a game".to_string());
+            }
+
             session.player_join_game(game_id, position).await
         }
         Result::Ok(message::Request::Hall) => {

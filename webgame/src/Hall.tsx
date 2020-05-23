@@ -69,7 +69,7 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
     className += " selected";
   }
 
-  if (props.player === undefined) {
+  if (!props.player) {
     onClick = (event: MouseEvent<HTMLDivElement>) =>
       props.onSelect(props.postion);
     className += " player-empty";
@@ -116,7 +116,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
   };
 
   return (
-    <div className="game-table-outer">
+    <div className="game-table-outer" key={props.game.id}>
       <div className="game-table">
         <div className="top">{props.game.players.filter((x) => x).length}</div>
         <div className="bottom">{props.game.players.length}</div>
@@ -126,6 +126,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
         <GamePlayer
           player={p}
           postion={i}
+          key={`player-${props.game.id}-i`}
           selectedIndex={selectedPosition}
           totalPlayer={props.game.players.length}
           onSelect={onSelectPlayer}
@@ -140,12 +141,12 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
   let [decks, setDecks] = useState(2);
   let [cardsToReserve, setCardsToReserve] = useState(8);
 
-  let pressedClass = pressed ? "creating" : "";
-  let creatingForm = null;
+  let pressedClass = pressed ? "creating" : "normal";
+  let creatingForm;
   if (pressed) {
     creatingForm = (
       <div>
-        <div>
+        <div className="row">
           <span>Total Players (几个人)</span>
           <input
             type="number"
@@ -155,7 +156,7 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
             onChange={(e) => setPlayers(parseInt(e.target.value))}
           />
         </div>
-        <div>
+        <div className="row">
           <span>Total Decks (几副牌)</span>
           <input
             max="10"
@@ -165,7 +166,7 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
             onChange={(e) => setDecks(parseInt(e.target.value))}
           />
         </div>
-        <div>
+        <div className="row">
           <span>Card to reserve (底牌几张)</span>
           <input
             type="number"
@@ -175,7 +176,7 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
             onChange={(e) => setCardsToReserve(parseInt(e.target.value))}
           />
         </div>
-        <div>
+        <div className="row">
           <button onClick={() => setPressed(false)}>Cancel</button>
           <button
             onClick={() => {
@@ -192,6 +193,8 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
         </div>
       </div>
     );
+  } else {
+    creatingForm = <div className="cross" onClick={() => setPressed(true)} />;
   }
 
   return <div className={`create-game ${pressedClass}`}>{creatingForm}</div>;
@@ -207,9 +210,10 @@ const HallPure: React.FunctionComponent<HallProps> = (props) => {
         {props.games.map((g) => (
           <GameTable game={g} onJoin={joinGame} />
         ))}
+        {props.myId ? <CreateGame createGame={props.createGame} /> : null}
       </div>
-      <CreateGame createGame={props.createGame} />
-      <Messages messages={props.messages} />
+
+      {/* <Messages messages={props.messages} /> */}
     </div>
   );
 };

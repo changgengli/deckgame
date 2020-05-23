@@ -59,25 +59,34 @@ impl Session {
         self.player.is_some()
     }
 
-    pub async fn leave_game(&mut self) {
+    pub async fn leave_game(&mut self) -> bool {
         {
+            let player = self.player.as_ref().unwrap();
             let game = self.game.as_ref().unwrap();
             let mut game = game.write().await;
-            game.remove_player(&self.player.as_ref().unwrap());
+            game.remove_player(&player);
             if game.get_current_players() == 0 {
                 self.hall.write().await.remove_game(game.get_game_id());
             }
         }
         self.game.take();
+        true
     }
 
-    pub async fn create_game(&mut self, mut game: game::Game) {
-        game.player_join(self.player.as_ref().unwrap().clone(), 0)
-            .unwrap();
+    pub async fn create_game(&mut self, game: game::Game) -> bool {
         let game_id = game.get_game_id();
         let game = Arc::new(RwLock::new(game));
         self.game.replace(game.clone());
-        self.hall.write().await.add_game(game_id, game);
+
+        {
+            let mut hall = self.hall.write().await;
+            hall.add_game(game_id, game.clone());
+        }
+        game.write()
+            .await
+            .player_join(self.player.as_ref().unwrap().clone(), 0)
+            .unwrap();
+        true
     }
 
     pub async fn login(&mut self, player: player::Player) -> bool {

@@ -53,6 +53,21 @@ pub enum Response {
         players: Vec<String>,
         games: Vec<Game>,
     },
+
+    GameInHall {
+        id: u32,
+        players: Vec<Option<String>>,
+    },
+
+    PlayerJoinedGame {
+        player: String,
+        game_id: u32,
+    },
+    PlayerLeftGame {
+        player: String,
+        game_id: u32,
+    },
+
     GameStart,
     MoveCard {
         position: u8,
