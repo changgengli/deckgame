@@ -1,23 +1,19 @@
-import reduxWebsocket from "@giantmachines/redux-websocket";
+import reduxWebsocket, { send } from "@giantmachines/redux-websocket";
 
-import { GameAction } from "./Actions";
-import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
-import { disconnect } from "cluster";
-import { act } from "react-dom/test-utils";
 import { ConnectionStatus } from "./Types";
-import { stat } from "fs";
 
 interface HallState {
   players: string[];
   game_ids: number[];
   games: {
-    players: Array<String | undefined>;
+    players: Array<string | undefined>;
     id: number;
   }[];
 }
 interface GameState {
-  players: Array<String | undefined>;
+  players: Array<string | undefined>;
   position: number;
   piles: {
     pile: string;
@@ -53,12 +49,7 @@ const connectionReducer = (
       return state;
   }
 };
-
-// export const getConnected = (state: State) => state.connected;
-// const intialState: State = { connection: "disconnected" };
-
 const message = (state: State, action: any): State => {
-  // ...state,
   // messages: [
   //   ...state.messages,
   //   {
@@ -68,14 +59,22 @@ const message = (state: State, action: any): State => {
   //     type: "INCOMING",
   //   },
   // ],
+
   let data = JSON.parse(action.payload.message);
   console.log(action);
+  switch (data.type) {
+    case "LoginSuccess":
+      return { ...state, myId: data.id, login: {} };
+
+    case "Hall":
+      let hall = { ...data };
+      return {
+        ...state,
+        hall,
+      };
+  }
   return state;
 };
-
-// export interface State {
-//   connection: ConnectionStatus;
-// }
 
 const rootReducer = (
   state: State = {
@@ -90,6 +89,7 @@ const rootReducer = (
   },
   action: any
 ): State => {
+  console.log("root reducer", action);
   switch (action.type) {
     case "REDUX_WEBSOCKET::OPEN":
     case "REDUX_WEBSOCKET::CONNECT":
@@ -100,7 +100,7 @@ const rootReducer = (
         ...state,
         connection,
       };
-    case "REDUX_WEBSOCKET::REDUX_WEBSOCKET_MESSAGE":
+    case "REDUX_WEBSOCKET::MESSAGE":
       return {
         ...message(state, action),
       };
@@ -111,5 +111,14 @@ const rootReducer = (
 export const store = configureStore({
   reducer: rootReducer,
   middleware: [thunk, reduxWebsocket()],
+});
+
+let myId: string | undefined = undefined;
+store.subscribe(() => {
+  //load hall after login
+  if (myId !== store.getState().myId) {
+    myId = store.getState().myId;
+    store.dispatch(send({ type: "Hall" }));
+  }
 });
 export type AppDispatch = typeof store.dispatch;

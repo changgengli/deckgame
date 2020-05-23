@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-import { useDrag } from "react-dnd";
+import React from "react";
 import { Card } from "./Card";
 
 interface HandProps {
@@ -58,4 +57,4 @@ const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
             VisibleBuryPile => "visible_bury_pile".to_owned(),
             SharedScorePile => "shared_score_pile".to_owned(),/
 */
-export { Hand };
+export { Hand, DiscardPile };

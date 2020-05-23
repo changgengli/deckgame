@@ -1,14 +1,16 @@
 import React, { useEffect, useRef, useState, MouseEvent } from "react";
-import { PlayerLogin, Message } from "./Message";
-import { HallProps } from "./Types";
+import { Message } from "./Message";
+import {
+  HallProps,
+  GameInHall,
+  CreateGameProps,
+  JoinGameRequest,
+  CreateGameRequest,
+} from "./Types";
 import { connect } from "react-redux";
 import { State } from "./Store";
-export interface GameInHall {
-  gameId: number;
-  players: Array<string | undefined>;
-  totalPlayers: number;
-  full: boolean;
-}
+import { send } from "@giantmachines/redux-websocket/dist";
+
 const Messages: React.FunctionComponent<{
   messages: Array<Message>;
 }> = (props: { messages: Array<Message> }) => {
@@ -53,6 +55,7 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
     Math.cos(((2 * Math.PI) / props.totalPlayer) * props.postion) * radius +
     center;
 
+  //size of player avatar
   const xSide = 40;
   const ySide = 40;
   const x = xCenter - xSide / 2;
@@ -94,12 +97,12 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
   let existingPlayers = props.game.players.filter((x) => x).length;
 
   let clickJoining = function () {
-    props.onJoin(props.game.gameId);
+    props.onJoin(props.game.id);
     setJoining(false);
   };
 
   let join =
-    existingPlayers !== props.game.totalPlayers &&
+    existingPlayers !== props.game.players.length &&
     selectedPosition !== undefined ? (
       <div className="join">
         <button onClick={clickJoining} className="join-button">
@@ -116,7 +119,7 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
     <div className="game-table-outer">
       <div className="game-table">
         <div className="top">{props.game.players.filter((x) => x).length}</div>
-        <div className="bottom">{props.game.totalPlayers}</div>
+        <div className="bottom">{props.game.players.length}</div>
         {join}
       </div>
       {props.game.players.map((p, i) => (
@@ -131,7 +134,68 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
     </div>
   );
 };
+const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
+  let [pressed, setPressed] = useState(false);
+  let [players, setPlayers] = useState(4);
+  let [decks, setDecks] = useState(2);
+  let [cardsToReserve, setCardsToReserve] = useState(8);
 
+  let pressedClass = pressed ? "creating" : "";
+  let creatingForm = null;
+  if (pressed) {
+    creatingForm = (
+      <div>
+        <div>
+          <span>Total Players (几个人)</span>
+          <input
+            type="number"
+            min="1"
+            max="11"
+            value={players}
+            onChange={(e) => setPlayers(parseInt(e.target.value))}
+          />
+        </div>
+        <div>
+          <span>Total Decks (几副牌)</span>
+          <input
+            max="10"
+            min="1"
+            type="number"
+            value={decks}
+            onChange={(e) => setDecks(parseInt(e.target.value))}
+          />
+        </div>
+        <div>
+          <span>Card to reserve (底牌几张)</span>
+          <input
+            type="number"
+            max="20"
+            min="0"
+            value={cardsToReserve}
+            onChange={(e) => setCardsToReserve(parseInt(e.target.value))}
+          />
+        </div>
+        <div>
+          <button onClick={() => setPressed(false)}>Cancel</button>
+          <button
+            onClick={() => {
+              setPressed(false);
+              props.createGame({
+                total_decks: decks,
+                total_players: players,
+                cards_to_reserve: cardsToReserve,
+              });
+            }}
+          >
+            Create
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return <div className={`create-game ${pressedClass}`}>{creatingForm}</div>;
+};
 const HallPure: React.FunctionComponent<HallProps> = (props) => {
   let joinGame = function (game_id: number) {
     // props.myId;
@@ -144,58 +208,37 @@ const HallPure: React.FunctionComponent<HallProps> = (props) => {
           <GameTable game={g} onJoin={joinGame} />
         ))}
       </div>
+      <CreateGame createGame={props.createGame} />
       <Messages messages={props.messages} />
     </div>
   );
 };
 
-const mapStateToProps = (state: State /*, ownProps*/): HallProps => {
-  return {
-    myId: "aaa",
-    games: [
-      {
-        gameId: 999,
-        players: [
-          "55",
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          "aaa",
-        ],
-        totalPlayers: 9,
-        full: false,
-      },
-      {
-        gameId: 999,
-        players: [
-          "55",
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          "aaa",
-        ],
-        totalPlayers: 9,
-        full: false,
-      },
-    ],
-    messages: [
-      {
-        kind: "PlayerLogin",
-        player: "aaaa",
-      } as PlayerLogin,
-    ],
-  };
-};
-
-const mapDispatchToProps = {};
-export const Hall = connect(mapStateToProps, mapDispatchToProps)(HallPure);
+export const Hall = connect(
+  (state: State /*, ownProps*/) => {
+    return {
+      myId: state.myId,
+      games: state.hall.games,
+      messages: [],
+    };
+  },
+  (dispatch) => {
+    return {
+      joinGame: (g: JoinGameRequest) =>
+        dispatch(
+          send({
+            type: "JoinGame",
+            postion: g.position,
+            game_id: g.id,
+          })
+        ),
+      createGame: (g: CreateGameRequest) =>
+        dispatch(
+          send({
+            ...g,
+            type: "CreateGame",
+          })
+        ),
+    };
+  }
+)(HallPure);

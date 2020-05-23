@@ -1,16 +1,13 @@
 import React, { Component, useEffect } from "react";
-import { useDrag } from "react-dnd";
-import { Card } from "./Card";
 import { Hand } from "./Pile";
 import { Hall } from "./Hall";
-import { PlayerLogin, Message, PlayerJoinGame } from "./Message";
 import { Provider } from "react-redux";
-import { store } from "./Store";
+import { store, State } from "./Store";
 import { connect } from "@giantmachines/redux-websocket/dist";
 import Connection from "./components/Connection";
 import CurrentUser from "./components/CurrentUser";
 import LoginWindow from "./components/LoginWindow";
-
+import { connect as redux_connect } from "react-redux";
 interface GameState {
   selected_card_pile: string;
   selected_cards: number[]; //index
@@ -32,9 +29,6 @@ interface GameProps {
 }
 
 class Root extends Component<GameProps> {
-  constructor(props: GameProps) {
-    super(props);
-  }
   render() {
     return (
       <div>
@@ -62,6 +56,14 @@ class Root extends Component<GameProps> {
   }
 }
 
+const RootContainer = redux_connect(
+  (state: State): GameProps => {
+    return {
+      myId: state.myId,
+    };
+  }
+)(Root);
+
 export const RootComponent: React.FunctionComponent<{}> = (props) => {
   var url = new URL("/websocket", window.location.href);
 
@@ -72,20 +74,7 @@ export const RootComponent: React.FunctionComponent<{}> = (props) => {
   });
   return (
     <Provider store={store}>
-      <Root />
+      <RootContainer />
     </Provider>
   );
 };
-
-// const mapStateToProps = (state: IState) => ({
-//     count: countersSelectors.getReduxCounter(state.counters),
-// });
-
-// const dispatchProps = {
-//     onIncrement: countersActions.in  crement,
-// };
-
-// export const FCCounterConnected = connect(
-//     mapStateToProps,
-//     dispatchProps
-// )(RootComponent);

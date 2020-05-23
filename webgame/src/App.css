@@ -37,24 +37,6 @@
   }
 }
 
-body {
-  background: -webkit-gradient(
-    linear,
-    50% 0%,
-    50% 100,
-    color-stop(100%, rgba(0, 0, 0, 0)),
-    color-stop(100%, #fa8072)
-  );
-  background: -webkit-linear-gradient(
-    top,
-    rgba(0, 0, 0, 0) 100px,
-    #fa8072 100px
-  );
-  background: -moz-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
-  background: -o-linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
-  background: linear-gradient(top, rgba(0, 0, 0, 0) 100px, #fa8072 100px);
-}
-
 .card {
   background-color: azure;
   border: red 0.5px solid;
@@ -78,15 +60,37 @@ body {
 
 .hand-pile {
   position: relative;
+  margin-top: 28px;
 }
 
-.game-table-outer {
+.hall {
+  min-height: 640px;
+  background-color: slategray;
+  text-align: left;
+}
+
+.hall .create-game {
   position: relative;
   width: 302px;
   height: 302px; /* border */
   background-color: darkslategrey;
   margin: 25px;
   display: inline-block;
+}
+.hall .create-game.creating {
+  background: red;
+  height: 100px;
+  position: relative;
+  width: 20px;
+}
+.hall .create-game.creating:after {
+  background: red;
+  content: "";
+  height: 20px;
+  left: -40px;
+  position: absolute;
+  top: 40px;
+  width: 100px;
 }
 
 .game-table-outer .player {
@@ -226,4 +230,5 @@ body {
 #head {
   padding-top: 8px;
   height: 20px;
+  display: block;
 }

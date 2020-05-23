@@ -1,5 +1,4 @@
-import React, { Component } from "react";
-import { useDrag } from "react-dnd";
+import React from "react";
 
 const SUITS = ["diamonds", "clubs", "hearts", "spades"];
 const NUMBERS_TO_CARD_IMAGE: Map<number, string> = new Map([
@@ -51,6 +50,7 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
       <img
         className={`card ${suit} ${highlight}`}
         src={"resources/" + name + ".png"}
+        alt={name}
         style={{ left: props.index * props.nonOverLap }}
         onClick={(event: React.MouseEvent<HTMLElement>) =>
           props.onClick(props.index)
