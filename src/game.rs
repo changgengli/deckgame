@@ -135,16 +135,21 @@ impl Game {
             })
             .collect();
         FullGame {
-            game: crate::message::Game {
-                id: self.id,
-                players: self
-                    .players
-                    .iter()
-                    .map(|p| p.as_ref().map(|x| x.id.clone()))
-                    .collect(),
-            },
+            game: self.gen_game_message(),
             piles_cards,
             card_counts,
+        }
+    }
+    pub fn gen_game_message(&self) -> crate::message::Game {
+        crate::message::Game {
+            id: self.id,
+            players: self
+                .players
+                .iter()
+                .map(|p| p.as_ref().map(|x| x.id.clone()))
+                .collect(),
+            total_decks: self.total_decks,
+            cards_to_reserve: self.cards_in_reserve_pile,
         }
     }
     pub fn deal(&mut self) -> bool {
@@ -322,7 +327,7 @@ impl Game {
             player.send_message(&PlayerJoinedGame {
                 player: player.id.clone(),
                 game_id: self.id,
-                position: position,
+                position,
             });
             self.broadcast_game();
 

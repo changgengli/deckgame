@@ -57,6 +57,8 @@ pub enum Response {
     GameInHall {
         id: u32,
         players: Vec<Option<String>>,
+        total_decks: u8,
+        cards_to_reserve: u16,
     },
 
     PlayerJoinedGame {
@@ -101,4 +103,6 @@ pub enum Response {
 pub struct Game {
     pub id: u32,
     pub players: Vec<Option<String>>,
+    pub total_decks: u8,
+    pub cards_to_reserve: u16,
 }

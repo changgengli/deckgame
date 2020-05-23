@@ -142,10 +142,8 @@ impl Session {
         let games = hall
             .iter_games()
             .map(|(id, game)| async move {
-                message::Game {
-                    id: *id,
-                    players: game.read().await.get_list_of_players_id(),
-                }
+                let g = game.read().await;
+                g.gen_game_message()
             })
             .collect::<Vec<_>>();
 

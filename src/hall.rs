@@ -52,9 +52,12 @@ impl Hall {
         self.players.contains_key(id)
     }
     pub fn broadcast_game(&self, game: &Game) {
+        let g = game.gen_game_message();
         let message = message::Response::GameInHall {
-            id: game.get_game_id(),
-            players: game.get_list_of_players_id(),
+            id: g.id,
+            players: g.players,
+            total_decks: g.total_decks,
+            cards_to_reserve: g.cards_to_reserve,
         };
         self.players.iter().for_each(|(_, p)| {
             p.send_message(&message);
