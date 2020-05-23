@@ -40,11 +40,6 @@
 .hall {
   /* min-height: 640px; */
   background-color: slategray;
-  flex-direction: row;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-  align-items: center;
 }
 
 .hall .create-game {
@@ -61,6 +56,13 @@
   height: 100px;
   position: relative;
   width: 20px;
+}
+.hall .game-list {
+  flex-direction: row;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: center;
 }
 
 .hall .create-game .cross:after {

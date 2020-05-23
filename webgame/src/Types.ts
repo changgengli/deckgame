@@ -16,14 +16,15 @@ export interface CreateGameProps {
   createGame: (game: CreateGameRequest) => void;
 }
 export interface JoinGameRequest {
-  id: number;
+  game_id: number;
   position: number;
 }
 export interface HallProps {
-  games: GameInHall[];
+  games: Record<number, GameInHall>;
   messages: Message[];
+  currentGame?: { id: number; position: number } | undefined;
   myId: string | undefined;
   createGame: CreateGameProps["createGame"];
   joinGame: (request: JoinGameRequest) => void;
-  //TODO action handler
+  leaveGame: () => void;
 }

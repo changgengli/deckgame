@@ -2,31 +2,28 @@ import reduxWebsocket, { send } from "@giantmachines/redux-websocket";
 
 import { configureStore } from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
-import { ConnectionStatus } from "./Types";
+import { ConnectionStatus, GameInHall } from "./Types";
 
 interface HallState {
   players: string[];
-  game_ids: number[];
-  games: {
-    players: Array<string | undefined>;
-    id: number;
-  }[];
+  games: Record<number, GameInHall>;
+  currentGame?: { id: number; position: number } | undefined;
 }
 interface GameState {
-  players: Array<string | undefined>;
   position: number;
-  piles: {
-    pile: string;
-    cards: number[] | undefined;
-    total_cards: number;
-  };
+  // piles: {
+  //   pile: string;
+  //   cards: number[] | undefined;
+  //   total_cards: number;
+  // };
+  id: number;
 }
 
 export interface State {
   connection: ConnectionStatus;
   myId?: string | undefined;
   hall: HallState;
-  game: GameState | undefined;
+  // game: GameState | undefined;
   login?: {
     errorMessage?: string | undefined;
   };
@@ -61,17 +58,61 @@ const message = (state: State, action: any): State => {
   // ],
 
   let data = JSON.parse(action.payload.message);
-  console.log(action);
+  console.log("message", data);
   switch (data.type) {
     case "LoginSuccess":
       return { ...state, myId: data.id, login: {} };
 
     case "Hall":
-      let hall = { ...data };
+      let hall = {
+        players: data.players,
+        games: Object.fromEntries(data.games.map((x: GameInHall) => [x.id, x])),
+      };
+
       return {
         ...state,
         hall,
       };
+    case "GameInHall":
+      let game = data as GameInHall;
+      let games;
+      if (game.players.filter((x) => x).length === 0) {
+        games = { ...state.hall.games };
+        delete games[game.id];
+      } else {
+        games = { ...state.hall.games, [game.id]: game };
+      }
+      return {
+        ...state,
+        hall: {
+          ...state.hall,
+          games: games,
+        },
+      };
+    case "PlayerJoinedGame":
+      if (data.player === state.myId) {
+        return {
+          ...state,
+          hall: {
+            ...state.hall,
+            currentGame: {
+              id: data.game_id,
+              position: data.position,
+            },
+          },
+        };
+      }
+    case "PlayerLeftGame": {
+      if (data.player === state.myId) {
+        return {
+          ...state,
+          hall: {
+            ...state.hall,
+            currentGame: undefined,
+          },
+        };
+      }
+    }
   }
   return state;
 };
@@ -81,10 +122,8 @@ const rootReducer = (
     connection: "disconnected",
     hall: {
       players: [],
-      game_ids: [],
-      games: [],
+      games: {},
     },
-    game: undefined,
     myId: "",
   },
   action: any

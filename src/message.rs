@@ -62,6 +62,7 @@ pub enum Response {
     PlayerJoinedGame {
         player: String,
         game_id: u32,
+        position: u8,
     },
     PlayerLeftGame {
         player: String,

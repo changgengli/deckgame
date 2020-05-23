@@ -60,7 +60,7 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
                 );
             }
 
-            if cards_to_reserve < 0 || cards_to_reserve > 50 {
+            if cards_to_reserve > 50 {
                 return send_bad_message(
                     &tx,
                     "too many or few cards to reserve are not supported".to_string(),

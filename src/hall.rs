@@ -1,5 +1,5 @@
 use crate::game::Game;
-use crate::player::Player;
+use crate::{message, player::Player};
 
 use std::collections::hash_map::Iter;
 use std::collections::HashMap;
@@ -50,5 +50,14 @@ impl Hall {
 
     pub fn has_player(&self, id: &String) -> bool {
         self.players.contains_key(id)
+    }
+    pub fn broadcast_game(&self, game: &Game) {
+        let message = message::Response::GameInHall {
+            id: game.get_game_id(),
+            players: game.get_list_of_players_id(),
+        };
+        self.players.iter().for_each(|(_, p)| {
+            p.send_message(&message);
+        });
     }
 }

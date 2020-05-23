@@ -31,7 +31,10 @@ const Messages: React.FunctionComponent<{
 
 interface GameTableProps {
   game: GameInHall;
-  onJoin: (gameId: number) => void;
+  onJoin: HallProps["joinGame"];
+  onLeave: HallProps["leaveGame"];
+  allowJoin: boolean;
+  allowLeave: boolean;
 }
 
 interface GamePlayerProps {
@@ -97,17 +100,29 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
   let existingPlayers = props.game.players.filter((x) => x).length;
 
   let clickJoining = function () {
-    props.onJoin(props.game.id);
+    props.onJoin({
+      game_id: props.game.id,
+      position: selectedPosition as number,
+    });
     setJoining(false);
   };
 
-  let join =
+  let joinOrLeave =
+    props.allowJoin &&
     existingPlayers !== props.game.players.length &&
     selectedPosition !== undefined ? (
       <div className="join">
         <button onClick={clickJoining} className="join-button">
           Join
         </button>
+      </div>
+    ) : props.allowLeave ? (
+      <div>
+        <div className="join">
+          <button onClick={props.onLeave} className="join-button">
+            Leave
+          </button>
+        </div>
       </div>
     ) : null;
 
@@ -116,17 +131,17 @@ const GameTable: React.FunctionComponent<GameTableProps> = (
   };
 
   return (
-    <div className="game-table-outer" key={props.game.id}>
+    <div className="game-table-outer" key={`game-table-${props.game.id}`}>
       <div className="game-table">
         <div className="top">{props.game.players.filter((x) => x).length}</div>
         <div className="bottom">{props.game.players.length}</div>
-        {join}
+        {joinOrLeave}
       </div>
       {props.game.players.map((p, i) => (
         <GamePlayer
           player={p}
           postion={i}
-          key={`player-${props.game.id}-i`}
+          key={`player-${props.game.id}-${i}`}
           selectedIndex={selectedPosition}
           totalPlayer={props.game.players.length}
           onSelect={onSelectPlayer}
@@ -200,15 +215,21 @@ const CreateGame: React.FunctionComponent<CreateGameProps> = (props) => {
   return <div className={`create-game ${pressedClass}`}>{creatingForm}</div>;
 };
 const HallPure: React.FunctionComponent<HallProps> = (props) => {
-  let joinGame = function (game_id: number) {
-    // props.myId;
-    // todo send message to server and enter the game UI.
-  };
   return (
     <div className="hall">
       <div className="game-list">
-        {props.games.map((g) => (
-          <GameTable game={g} onJoin={joinGame} />
+        {Object.values(props.games).map((g) => (
+          <GameTable
+            game={g}
+            onJoin={props.joinGame}
+            onLeave={props.leaveGame}
+            key={`game-table-${g.id}`}
+            allowJoin={
+              props.currentGame?.id === undefined ||
+              props.currentGame?.id === null
+            }
+            allowLeave={props.currentGame?.id === g.id}
+          />
         ))}
         {props.myId ? <CreateGame createGame={props.createGame} /> : null}
       </div>
@@ -224,6 +245,7 @@ export const Hall = connect(
       myId: state.myId,
       games: state.hall.games,
       messages: [],
+      currentGame: state.hall.currentGame,
     };
   },
   (dispatch) => {
@@ -231,9 +253,8 @@ export const Hall = connect(
       joinGame: (g: JoinGameRequest) =>
         dispatch(
           send({
+            ...g,
             type: "JoinGame",
-            postion: g.position,
-            game_id: g.id,
           })
         ),
       createGame: (g: CreateGameRequest) =>
@@ -243,6 +264,9 @@ export const Hall = connect(
             type: "CreateGame",
           })
         ),
+      leaveGame: () => {
+        dispatch(send({ type: "LeaveGame" }));
+      },
     };
   }
 )(HallPure);

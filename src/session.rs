@@ -65,9 +65,11 @@ impl Session {
             let game = self.game.as_ref().unwrap();
             let mut game = game.write().await;
             game.remove_player(&player);
+            let mut hall = self.hall.write().await;
             if game.get_current_players() == 0 {
-                self.hall.write().await.remove_game(game.get_game_id());
+                hall.remove_game(game.get_game_id());
             }
+            hall.broadcast_game(&game);
         }
         self.game.take();
         true
@@ -75,17 +77,16 @@ impl Session {
 
     pub async fn create_game(&mut self, game: game::Game) -> bool {
         let game_id = game.get_game_id();
-        let game = Arc::new(RwLock::new(game));
-        self.game.replace(game.clone());
-
+        let game_ref = Arc::new(RwLock::new(game));
+        self.game.replace(game_ref.clone());
+        let mut game = game_ref.write().await;
+        game.player_join(self.player.as_ref().unwrap().clone(), 0)
+            .unwrap();
         {
             let mut hall = self.hall.write().await;
-            hall.add_game(game_id, game.clone());
+            hall.add_game(game_id, game_ref.clone());
+            hall.broadcast_game(&game);
         }
-        game.write()
-            .await
-            .player_join(self.player.as_ref().unwrap().clone(), 0)
-            .unwrap();
         true
     }
 
@@ -106,12 +107,15 @@ impl Session {
 
     pub async fn player_join_game(&mut self, game_id: u32, position: u8) -> bool {
         let tx = &self.player.as_ref().unwrap().tx;
-        match self.hall.read().await.get_game(game_id) {
-            Some(game) => {
+        let hall = self.hall.read().await;
+        match hall.get_game(game_id) {
+            Some(game_ref) => {
                 let player = self.player.as_ref().unwrap().clone();
-                match game.write().await.player_join(player, position) {
+                let mut game = game_ref.write().await;
+                match game.player_join(player, position) {
                     Result::Ok(_) => {
-                        self.game.replace(game.clone());
+                        self.game.replace(game_ref.clone());
+                        hall.broadcast_game(&game);
                         return send_message(&tx, &message::Response::Pong);
                     }
                     Result::Err(_e) => {
