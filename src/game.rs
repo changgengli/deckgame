@@ -1,5 +1,6 @@
 use crate::card::Card;
 use crate::error;
+use crate::message::Response;
 use crate::message::Response::*;
 use crate::player::Player;
 use rand::prelude::*;
@@ -27,11 +28,11 @@ impl Serialize for Pile {
     {
         use Pile::*;
         let s = match *self {
-            Hand(p) => format!("hand_{}", p),
-            DiscardPile(p) => format!("discard_pile_{}", p),
-            ScorePile(p) => format!("score_pile_{}", p),
-            ClaimPile(p) => format!("claim_piple_{}", p),
-            HiddenBuryPile(p) => format!("hidden_bury_pile_{}", p),
+            Hand(p) => format!("hand#{}", p),
+            DiscardPile(p) => format!("discard_pile#{}", p),
+            ScorePile(p) => format!("score_pile#{}", p),
+            ClaimPile(p) => format!("claim_piple#{}", p),
+            HiddenBuryPile(p) => format!("hidden_bury_pile#{}", p),
             DrawPile => "draw_pile".to_owned(),
             ReservedPile => "reserved_piple".to_owned(), //shared
             VisibleBuryPile => "visible_bury_pile".to_owned(),
@@ -100,9 +101,9 @@ pub struct Game {
     cards_in_reserve_pile: u16,
     pile_to_cards: HashMap<Pile, Vec<Card>>,
     current_players: u8,
-
     players_ready: Vec<bool>,
     deal_index: u8,
+    ready: bool,
 }
 
 fn gen_game_id() -> u32 {
@@ -135,11 +136,14 @@ impl Game {
             })
             .collect();
         FullGame {
+            position: position,
             game: self.gen_game_message(),
             piles_cards,
             card_counts,
+            players_ready: self.players_ready.clone(),
         }
     }
+
     pub fn gen_game_message(&self) -> crate::message::Game {
         crate::message::Game {
             id: self.id,
@@ -222,6 +226,12 @@ impl Game {
 
         let postion = self.get_player_position(player);
         *self.players_ready.get_mut(postion).unwrap() = true;
+
+        self.broadcast_message(&PlayerReady {
+            game_id: self.id,
+            position: postion as u8,
+        });
+
         let total_ready = self.players_ready.iter().filter(|&&x| x).count() as u8;
 
         if total_ready == self.total_players {
@@ -241,12 +251,12 @@ impl Game {
         self.total_players - total_ready
     }
 
-    pub fn get_list_of_players_id(&self) -> Vec<Option<String>> {
-        self.players
-            .iter()
-            .map(|p| p.as_ref().map(|pp| pp.id.clone()))
-            .collect()
-    }
+    // pub fn get_list_of_players_id(&self) -> Vec<Option<String>> {
+    //     self.players
+    //         .iter()
+    //         .map(|p| p.as_ref().map(|pp| pp.id.clone()))
+    //         .collect()
+    // }
     pub fn get_game_id(&self) -> u32 {
         self.id
     }
@@ -289,6 +299,7 @@ impl Game {
             current_players: 0,
             players_ready: vec![false; usize::from(total_players)],
             deal_index: 0,
+            ready: false,
         }
     }
 
@@ -329,8 +340,16 @@ impl Game {
                 game_id: self.id,
                 position,
             });
-            self.broadcast_game();
 
+            if !self.ready && self.current_players == self.total_players {
+                self.players.iter().for_each(|p| {
+                    let p = p.as_ref().unwrap();
+                    p.send_message(&GameReady);
+                });
+            } else if self.ready {
+                player.send_message(&GameReady);
+                player.send_message(&self.build_message_for_player(&player));
+            }
             return Result::Ok(());
         }
 
@@ -433,16 +452,16 @@ impl Game {
             })
             .unwrap()
     }
-    fn broadcast_game(&self) {
+    fn broadcast_message(&self, message: &Response) {
         // when a player join a game, shall they still be in the lobby?
-
+        // now this message is sent to all players in hall, so we don't need it here
         // let message = GameInHall {
         //     id: self.id,
         //     players: self.get_list_of_players_id(),
         // };
-        // self.players.iter().filter(|&p| p.is_some()).for_each(|p| {
-        //     p.as_ref().unwrap().send_message(&message);
-        // });
+        self.players.iter().filter(|&p| p.is_some()).for_each(|p| {
+            p.as_ref().unwrap().send_message(&message);
+        });
     }
     pub fn remove_player(&mut self, player: &Player) {
         let position = self.get_player_position(player);
@@ -454,7 +473,7 @@ impl Game {
             player: player.id.clone(),
             game_id: self.id.clone(),
         });
-        self.broadcast_game();
+        // self.broadcast_game();
     }
 }
 

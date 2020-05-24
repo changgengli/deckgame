@@ -72,6 +72,7 @@ pub enum Response {
     },
 
     GameStart,
+    GameReady,
     MoveCard {
         position: u8,
         source: game::Pile,
@@ -90,12 +91,17 @@ pub enum Response {
         message: String,
     },
 
-    StartGame,
-
     FullGame {
+        position: u8,
         game: Game,
         card_counts: HashMap<game::Pile, u16>,
         piles_cards: HashMap<game::Pile, Vec<card::Card>>,
+        players_ready: Vec<bool>,
+    },
+
+    PlayerReady {
+        position: u8,
+        game_id: u32,
     },
 }
 

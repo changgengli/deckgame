@@ -26,6 +26,7 @@ interface Hall {
 
 interface GameProps {
   myId?: string | undefined;
+  inGame: boolean;
 }
 
 class Root extends Component<GameProps> {
@@ -37,8 +38,8 @@ class Root extends Component<GameProps> {
           <Connection />
         </div>
         {this.props.myId ? null : <LoginWindow />}
-        <Hall />
-        <Hand
+        {this.props.inGame ? null : <Hall />}
+        {/* <Hand
           trumpColor={undefined}
           trumpNumber={undefined}
           cards={Array.from(Array(54).keys())}
@@ -49,8 +50,7 @@ class Root extends Component<GameProps> {
             ])
           }
           onCardClick={(n) => console.log("selected " + n)}
-        />
-        ;
+        /> */}
       </div>
     );
   }
@@ -60,6 +60,7 @@ const RootContainer = redux_connect(
   (state: State): GameProps => {
     return {
       myId: state.myId,
+      inGame: state.game?.id !== null && state.game?.id !== undefined,
     };
   }
 )(Root);
