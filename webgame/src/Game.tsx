@@ -8,6 +8,7 @@ import Connection from "./components/Connection";
 import CurrentUser from "./components/CurrentUser";
 import LoginWindow from "./components/LoginWindow";
 import { connect as redux_connect } from "react-redux";
+import GameRoom from "./components/GameRoom";
 interface GameState {
   selected_card_pile: string;
   selected_cards: number[]; //index
@@ -34,11 +35,10 @@ class Root extends Component<GameProps> {
     return (
       <div>
         <div id="head">
-          <CurrentUser />
           <Connection />
+          {this.props.myId ? <CurrentUser /> : <LoginWindow />}
         </div>
-        {this.props.myId ? null : <LoginWindow />}
-        {this.props.inGame ? null : <Hall />}
+        {this.props.inGame ? <GameRoom /> : this.props.myId ? <Hall /> : null}
         {/* <Hand
           trumpColor={undefined}
           trumpNumber={undefined}

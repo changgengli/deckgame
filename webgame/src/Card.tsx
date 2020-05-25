@@ -18,13 +18,14 @@ const NUMBERS_TO_CARD_CHAR = new Map([
 const SUITS_UNICODE = ["♦", "♣", "♥", "♠"];
 const CARD_BACK = "🂠";
 
-interface CardProps {
+export interface CardProps {
   index: number;
   value: number;
   highlight: boolean;
-  onClick: (value: number) => void;
+  onClick: (index: number, value: number) => void;
   fullSize: boolean;
   nonOverLap: number;
+  age?: "new" | "old" | "older";
 }
 
 const Card: React.FunctionComponent<CardProps> = (props) => {
@@ -48,33 +49,56 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
   if (props.fullSize) {
     return (
       <img
-        className={`card ${suit} ${highlight}`}
+        className={`card ${suit} ${highlight} card-age-${props.age ?? "old"}`}
         src={"resources/" + name + ".png"}
         alt={name}
         style={{ left: props.index * props.nonOverLap }}
         onClick={(event: React.MouseEvent<HTMLElement>) =>
-          props.onClick(props.index)
+          props.onClick(props.index, props.value)
         }
       />
     );
   } else {
     let unicode: string;
+    let value: string;
     let css;
     if (name === "red_joker") {
-      unicode = "🂿";
+      value = unicode = "🂿";
       css = "red_joker";
     } else if (name === "black_joker") {
-      unicode = "🂿";
+      value = unicode = "🂿";
       css = "black_joker";
     } else {
       css = SUITS[s].toLowerCase();
       if (NUMBERS_TO_CARD_CHAR.has(num)) {
-        unicode = SUITS_UNICODE[s] + NUMBERS_TO_CARD_CHAR.get(num);
+        unicode = SUITS_UNICODE[s];
+        value = "" + NUMBERS_TO_CARD_CHAR.get(num);
       } else {
-        unicode = SUITS_UNICODE[s] + ((props.value % 13) + 1) + "";
+        unicode = SUITS_UNICODE[s];
+        value = (props.value % 13) + 1 + "";
       }
     }
-    return <span className={`${css} card-small ${highlight}`}>{unicode}</span>;
+    return (
+      <div
+        className={`${css} card-small ${highlight} card-age-${
+          props.age ?? "old"
+        }`}
+      >
+        <div>{value}</div>
+        <div>{unicode}</div>
+      </div>
+    );
   }
 };
-export { Card, CARD_BACK };
+
+const Cardback: React.FunctionComponent<{ index: number }> = ({ index }) => {
+  return (
+    <div
+      className="card-back"
+      style={{
+        left: index * 10,
+      }}
+    ></div>
+  );
+};
+export { Card, CARD_BACK, Cardback };

@@ -1,24 +1,48 @@
+body {
+  background-color: #162447;
+  color: #e43f5a;
+}
+
 .App {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+.card-back {
+  width: 55px;
+  height: 81px;
+  border-radius: 4px;
+}
+.card-back.small {
+  width: 26px;
+  height: 40px;
+  border-radius: 2px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.hidden-pile .card {
+  position: absolute;
+  background-color: #1f4068;
+  min-width: 60px;
+  min-height: 60px;
 }
 
-.App-link {
-  color: #61dafb;
+.hidden-pile {
+  margin: 12px;
+}
+
+.visible-pile .card {
+  position: absolute;
+  width: 55px;
+  height: 81px;
 }
 
 .card {
   background-color: azure;
-  border: red 0.5px solid;
+  border: #1f4068 0.5px solid;
   border-radius: 8px;
 }
 
 .card-highlight {
-  background-color: lightblue;
+  background-color: #e43f5a;
 }
 
 .hand-pile .card {
@@ -37,22 +61,53 @@
   margin-top: 28px;
 }
 
+.game-window {
+  flex-direction: row;
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: stretch;
+  margin: 18px;
+}
+
+.game-room-outer {
+  display: inline-flex;
+  background-color: #162447;
+  width: 1400px;
+  height: 1160px;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-room {
+  background-image: url(/table-background.jpg);
+  background-repeat: repeat;
+  height: 960px;
+  width: 1200px;
+}
+
+.messages {
+  display: inline-flex;
+  background-color: #1b1b2f;
+  color: bisque;
+}
+
 .hall {
   /* min-height: 640px; */
-  background-color: slategray;
+  background-color: #1f4068;
+  width: 960px;
 }
 
 .hall .create-game {
   width: 302px;
   height: 302px; /* border */
-  background-color: wheat;
+  background-color: #162447;
   margin: 25px;
   justify-content: space-around;
   align-items: center;
   display: inline-flex;
 }
 .hall .create-game .cross {
-  background: slategrey;
+  background: #e43f5a;
   height: 100px;
   position: relative;
   width: 20px;
@@ -66,7 +121,7 @@
 }
 
 .hall .create-game .cross:after {
-  background: slategrey;
+  background: #e43f5a;
   content: "";
   height: 20px;
   left: -40px;
@@ -84,7 +139,7 @@
   position: relative;
   width: 302px;
   height: 302px; /* border */
-  background-color: darkslategrey;
+  background-color: #162447;
   margin: 25px;
   display: inline-flex;
 }
@@ -93,17 +148,19 @@
   position: absolute;
   width: 40px;
   height: 40px;
-  color: #61dafb;
+  color: #1f4068;
   border-radius: 1px;
 }
 
 .game-table-outer .player .name {
   height: 15px;
-  font-size: 12px;
-  line-height: 12px;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: center;
+  color: #e43f5a;
 }
 .game-table-outer .player .avatar {
-  background-color: yellowgreen;
+  background-color: #e43f5a;
   border-radius: 6px;
   width: 40px;
   height: 25px;
@@ -122,7 +179,7 @@
 }
 
 .game-table-outer .player.selected {
-  border: 1px solid lightskyblue;
+  border: 1px solid #e43f5a;
   cursor: default;
 }
 
@@ -135,7 +192,7 @@
   background-image: url(/light-wood.jpg);
   border-radius: 75px;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  box-shadow: 8px 5px 5px -5px rgba(0, 0, 0, 0.51);
+  /* box-shadow: 8px 5px 5px -5px rgba(0, 0, 0, 0.51); */
   border-style: solid;
   border-width: 0.5px;
 }
@@ -145,11 +202,12 @@
   width: 150px;
   height: 75px;
   line-height: 75px;
-  border-bottom: lightsalmon 1px solid;
-  color: blanchedalmond;
+  /* border-bottom: #e43f5a 1px solid; */
+  /* color: blanchedalmond; */
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   font-size: 24px;
   text-align: center;
+  color: #1b1b2f;
 }
 
 .game-table .bottom {
@@ -161,8 +219,9 @@
   line-height: 50px;
   vertical-align: top;
   font-size: 28px;
-  color: blanchedalmond;
   font-weight: bold;
+  color: #162447;
+  border-top: #1b1b2f solid 2px;
   text-align: center;
 }
 
@@ -173,7 +232,7 @@
   width: 150px;
   height: 150px;
   padding-top: 60px;
-  padding-bottom: 50px;
+  padding-left: 45px;
 }
 
 .game-table .join-button {
@@ -181,19 +240,18 @@
   height: 25px;
   vertical-align: middle;
   font-size: 10px;
-  color: aquamarine;
-  background-color: darkgrey;
+  color: #e43f5a;
+  background-color: #1f4068;
   padding-left: 10px;
   padding-right: 10px;
 }
 
 .connection-indicator {
-  height: 15px;
-  width: 15px;
+  height: 24px;
+  width: 24px;
   background-color: salmon;
   border-radius: 50%;
-  float: right;
-  margin-right: 18px;
+  display: inline-flex;
 }
 
 .connection-indicator.connected {
@@ -217,16 +275,88 @@
 
 .current-user {
   margin-left: 18px;
-  float: left;
+  display: inline-flex;
+  font-size: 24px;
 }
 
 .current-user.not-login {
-  opacity: 60%;
-  filter: grayscale(100%);
+  opacity: 70%;
+  filter: blur(30%);
+  /* filter: grayscale(100%); */
 }
 
 #head {
-  padding-top: 8px;
-  height: 20px;
-  display: block;
+  /* padding-top: 8px; */
+  height: 28px;
+  /* margin: 12px; */
+
+  min-width: 720px;
+  padding: 6px;
+  display: flex;
+  background-color: #1b1b2f;
+  justify-content: space-around;
+  align-items: center;
+}
+
+/* Add this attribute to the element that needs a tooltip */
+[data-tooltip] {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+}
+
+/* Hide the tooltip content by default */
+[data-tooltip]:before,
+[data-tooltip]:after {
+  visibility: hidden;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Position tooltip above the element */
+[data-tooltip]:before {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-bottom: 5px;
+  margin-left: -80px;
+  padding: 7px;
+  width: 160px;
+  -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+  background-color: #1f4068;
+  /* background-color: hsla(0, 0%, 20%, 0.9); */
+  color: #e43f5a;
+  content: attr(data-tooltip);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Triangle hack to make tooltip look like a speech bubble */
+[data-tooltip]:after {
+  position: absolute;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -5px;
+  width: 0;
+  border-top: 5px solid #1f4068;
+  /* border-top: 5px solid hsla(0, 0%, 20%, 0.9); */
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+  content: " ";
+  font-size: 0;
+  line-height: 0;
+}
+
+/* Show tooltip content on hover */
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after {
+  visibility: visible;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+  opacity: 1;
 }

@@ -141,7 +141,7 @@ impl Session {
         let hall = self.hall.read().await;
         let games = hall
             .iter_games()
-            .map(|(id, game)| async move {
+            .map(|(_id, game)| async move {
                 let g = game.read().await;
                 g.gen_game_message()
             })

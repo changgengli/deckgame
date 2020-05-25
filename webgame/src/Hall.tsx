@@ -52,10 +52,16 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
   const radius = 120;
   const center = 151;
   const xCenter =
-    Math.sin(((2 * Math.PI) / props.totalPlayer) * props.postion) * radius +
+    Math.sin(
+      ((2 * Math.PI) / props.totalPlayer) * props.postion + Math.PI / 2
+    ) *
+      radius +
     center;
   const yCenter =
-    Math.cos(((2 * Math.PI) / props.totalPlayer) * props.postion) * radius +
+    Math.cos(
+      ((2 * Math.PI) / props.totalPlayer) * props.postion + Math.PI / 2
+    ) *
+      radius +
     center;
 
   //size of player avatar

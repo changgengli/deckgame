@@ -34,7 +34,7 @@ impl Serialize for Pile {
             ClaimPile(p) => format!("claim_piple#{}", p),
             HiddenBuryPile(p) => format!("hidden_bury_pile#{}", p),
             DrawPile => "draw_pile".to_owned(),
-            ReservedPile => "reserved_piple".to_owned(), //shared
+            ReservedPile => "reserved_pile".to_owned(), //shared
             VisibleBuryPile => "visible_bury_pile".to_owned(),
             SharedScorePile => "shared_score_pile".to_owned(),
         };
@@ -136,7 +136,7 @@ impl Game {
             })
             .collect();
         FullGame {
-            position: position,
+            position,
             game: self.gen_game_message(),
             piles_cards,
             card_counts,
@@ -242,6 +242,7 @@ impl Game {
             self.players.iter().for_each(|p| match p {
                 Some(a) => {
                     a.send_message(&GameStart);
+                    a.send_message(&self.build_message_for_player(a));
                     ()
                 }
                 None => (),
@@ -263,39 +264,54 @@ impl Game {
     pub fn get_current_players(&self) -> u8 {
         self.current_players
     }
-    pub fn shuffle(&mut self) {
-        let mut all_cards: Vec<Card> = (0..4).flat_map(|_x| Card::generate_deck(true)).collect();
-        shuffle(&mut all_cards);
-
+    fn init_piles(total_players: u8) -> HashMap<Pile, Vec<Card>> {
         let mut piles_to_cards: HashMap<Pile, Vec<Card>> = HashMap::new();
         {
-            let mut draw_cards: Vec<Card> = Vec::new();
-            (0..self.total_decks as u16 * 54 - self.cards_in_reserve_pile).for_each(|_x| {
-                draw_cards.push(all_cards.pop().unwrap());
-            });
-            piles_to_cards.insert(Pile::DrawPile, draw_cards);
-            piles_to_cards.insert(Pile::ReservedPile, all_cards);
+            // let mut draw_cards: Vec<Card> = Vec::new();
+            // (0..self.total_decks as u16 * 54 - self.cards_in_reserve_pile).for_each(|_x| {
+            //     draw_cards.push(all_cards.pop().unwrap());
+            // });
+            piles_to_cards.insert(Pile::DrawPile, Vec::new());
+            piles_to_cards.insert(Pile::ReservedPile, Vec::new());
             piles_to_cards.insert(Pile::VisibleBuryPile, Vec::new());
             piles_to_cards.insert(Pile::SharedScorePile, Vec::new());
         }
-        (0..self.total_players).for_each(|player| {
+        (0..total_players).for_each(|player| {
             piles_to_cards.insert(Pile::Hand(player), Vec::new());
             piles_to_cards.insert(Pile::DiscardPile(player), Vec::new());
             piles_to_cards.insert(Pile::ClaimPile(player), Vec::new());
             piles_to_cards.insert(Pile::ScorePile(player), Vec::new());
             piles_to_cards.insert(Pile::HiddenBuryPile(player), Vec::new());
         });
-        self.pile_to_cards = piles_to_cards;
+        return piles_to_cards;
+    }
+    pub fn shuffle(&mut self) {
+        self.pile_to_cards = Game::init_piles(self.total_players);
+
+        let mut all_cards: Vec<Card> = (0..self.total_players)
+            .flat_map(|_x| Card::generate_deck(true))
+            .collect();
+        shuffle(&mut all_cards);
+
+        {
+            let mut draw_cards: Vec<Card> = Vec::new();
+            (0..self.total_decks as u16 * 54 - self.cards_in_reserve_pile).for_each(|_x| {
+                draw_cards.push(all_cards.pop().unwrap());
+            });
+            self.pile_to_cards.insert(Pile::DrawPile, draw_cards);
+            self.pile_to_cards.insert(Pile::ReservedPile, all_cards);
+        }
+
         self.deal_index = 0;
     }
     pub fn new(total_players: u8, total_decks: u8, cards_in_reserve_pile: u16) -> Game {
         Game {
             id: gen_game_id(),
             players: (0..total_players).map(|_x| Option::None).collect(),
-            total_decks: total_decks,
-            total_players: total_players,
-            cards_in_reserve_pile: cards_in_reserve_pile,
-            pile_to_cards: HashMap::new(),
+            total_decks,
+            total_players,
+            cards_in_reserve_pile,
+            pile_to_cards: Game::init_piles(total_players),
             current_players: 0,
             players_ready: vec![false; usize::from(total_players)],
             deal_index: 0,
@@ -342,9 +358,10 @@ impl Game {
             });
 
             if !self.ready && self.current_players == self.total_players {
+                self.broadcast_message(&GameReady);
                 self.players.iter().for_each(|p| {
                     let p = p.as_ref().unwrap();
-                    p.send_message(&GameReady);
+                    p.send_message(&self.build_message_for_player(p));
                 });
             } else if self.ready {
                 player.send_message(&GameReady);
@@ -522,5 +539,40 @@ mod tests {
         println!("{:?}", game);
         assert!(game.players.get(0).unwrap().is_none());
         assert!(game.current_players == 0);
+    }
+
+    #[tokio::test]
+    async fn test_player_join_game() {
+        let mut game = Game::new(2, 2, 40);
+        let (tx, mut rx1) = mpsc::unbounded_channel();
+
+        let player = Arc::new(Player {
+            id: "aaa0".to_owned(),
+            password: "bbb".to_owned(),
+            tx,
+        });
+
+        let (tx, rx2) = mpsc::unbounded_channel();
+        let player2 = Arc::new(Player {
+            id: "bbb1".to_owned(),
+            password: "bbb".to_owned(),
+            tx,
+        });
+
+        game.player_join(player.clone(), 0);
+        game.player_join(player2.clone(), 1);
+        // let m = rx1.recv().await;
+        // println!("{:?}", game.build_message_for_player(&player));
+
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
+        game.player_start_game(&player.clone());
+        game.player_start_game(&player2.clone());
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
+        println!("{:?}", rx1.recv().await);
     }
 }

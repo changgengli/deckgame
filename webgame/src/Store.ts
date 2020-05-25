@@ -17,7 +17,7 @@ interface CardState {
   timestamp: number;
 }
 
-interface PileState {
+export interface PileState {
   name: string;
   visible: boolean;
   cards: CardState[];
@@ -25,7 +25,7 @@ interface PileState {
   sortable: boolean;
   orderBy: "natural" | "numberThenSuit" | "suitThenNumber";
 }
-interface GameState {
+export interface GameState {
   position: number;
   id: number;
   piles: Record<string, PileState>;
@@ -191,35 +191,37 @@ function isPileSortable(name: string): boolean {
   }
 }
 function merge(gameState: GameState | undefined, data: FullGame): GameState {
-  Object.entries(data.piles_cards).map(([name, cards]) => {
-    return [
-      name,
-      {
+  let piles: GameState["piles"] = Object.fromEntries(
+    Object.entries(data.piles_cards).map(([name, cards]) => {
+      console.log("pile ", name, ", cards count, ", data.card_counts[name]);
+      return [
         name,
-        position: 0, // don't care for now,
-        visible: cards.length !== 0,
-        count: data.card_counts[name],
+        {
+          name,
+          visible: true, //TODO
+          count: data.card_counts[name],
 
-        cards:
-          cards.length === 0
-            ? cards
-            : mergeCards(
-                cards,
-                gameState?.piles[name]?.cards,
-                gameState?.piles[name]?.orderBy ?? "natural"
-              ),
-        sortable: isPileSortable(name),
-        orderBy: gameState?.piles[name]?.orderBy ?? "natural",
-      },
-    ];
-  });
+          cards:
+            cards.length === 0
+              ? []
+              : mergeCards(
+                  cards,
+                  gameState?.piles[name]?.cards,
+                  gameState?.piles[name]?.orderBy ?? "natural"
+                ),
+          sortable: isPileSortable(name),
+          orderBy: gameState?.piles[name]?.orderBy ?? "natural",
+        },
+      ];
+    })
+  );
 
   return {
     id: data.game.id,
     position: data.position,
     players: data.game.players,
     players_ready: data.players_ready,
-    piles: {},
+    piles: piles,
   };
 }
 
@@ -233,6 +235,7 @@ function addCardsToPile(pile: PileState, cards: number[]): PileState {
   return result;
 }
 function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
+  console.log("before remove", pile);
   let result = { ...pile };
   result.count -= cards.length;
 
@@ -276,6 +279,7 @@ function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
   // now add any remaining
 
   result.cards = sortCards(secondRound, result.orderBy);
+  console.log("after remove", result);
   return result;
 }
 
@@ -314,6 +318,7 @@ const message = (state: State, action: any): State => {
       };
     case "PlayerJoinedGame":
       if (data.player === state.myId) {
+        console.log("set my position to ", data.position);
         return {
           ...state,
           hall: {
@@ -337,7 +342,7 @@ const message = (state: State, action: any): State => {
       }
 
     case "PlayerReady":
-      if (state.game && state.game.id === data.id) {
+      if (state.game && state.game.id === data.game_id) {
         let gr = [...state.game.players_ready];
         gr[data.position] = true;
         return {
@@ -347,6 +352,8 @@ const message = (state: State, action: any): State => {
             players_ready: gr,
           },
         };
+      } else {
+        console.log("game not stared", state.game, data);
       }
 
       return state;
@@ -394,7 +401,7 @@ const message = (state: State, action: any): State => {
     },*/
       let piles: GameState["piles"] = { ...state.game?.piles };
       piles[data.source].count += data.total_cards;
-      piles[data.destination].count += data.total_decks;
+      piles[data.destination].count += data.total_cards;
       return {
         ...state,
         game: state.game

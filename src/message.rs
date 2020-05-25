@@ -39,7 +39,7 @@ pub enum Request {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum Response {
     Pong,
@@ -105,7 +105,7 @@ pub enum Response {
     },
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Game {
     pub id: u32,
     pub players: Vec<Option<String>>,
