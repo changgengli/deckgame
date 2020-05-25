@@ -374,33 +374,17 @@ const message = (state: State, action: any): State => {
         state.game?.piles[data.destination] as PileState,
         data.cards
       );
-      /*
-    MoveCard {
-        position: u8,
-        source: game::Pile,
-        destination: game::Pile,
-        cards: Vec<card::Card>,
-    }, */
       return {
         ...state,
-        game: state.game
-          ? {
-              ...state.game,
-              piles,
-            }
-          : undefined,
+        game: {
+          ...(state.game as GameState),
+          piles,
+        },
       };
 
     case "HiddenMoveCard": {
-      /*
-    HiddenMoveCard {
-        position: u8,
-        source: game::Pile,
-        destination: game::Pile,
-        total_cards: u16,
-    },*/
       let piles: GameState["piles"] = { ...state.game?.piles };
-      piles[data.source].count += data.total_cards;
+      piles[data.source].count -= data.total_cards;
       piles[data.destination].count += data.total_cards;
       return {
         ...state,
@@ -427,7 +411,7 @@ const rootReducer = (
   },
   action: any
 ): State => {
-  console.log("root reducer", action);
+  console.log("root reducer", action, state);
   let myId;
   switch (action.type) {
     case "REDUX_WEBSOCKET::BROKEN":
@@ -449,6 +433,8 @@ const rootReducer = (
       return {
         ...message(state, action),
       };
+    case "DEBUG":
+      return action;
     default:
       return state;
   }

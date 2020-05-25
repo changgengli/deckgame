@@ -96,7 +96,7 @@ const Cardback: React.FunctionComponent<{ index: number }> = ({ index }) => {
     <div
       className="card-back"
       style={{
-        left: index * 10,
+        left: index * 4,
       }}
     ></div>
   );

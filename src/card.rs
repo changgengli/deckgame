@@ -7,8 +7,8 @@ pub struct Card {
 impl Card {
     pub fn generate_deck(with_joker: bool) -> Vec<Card> {
         let cards = match with_joker {
-            true => 53,
-            false => 51,
+            true => 54,
+            false => 52,
         };
         (0..cards).map(|y: u8| Card { value: y }).collect()
     }

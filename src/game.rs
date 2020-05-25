@@ -288,7 +288,7 @@ impl Game {
     pub fn shuffle(&mut self) {
         self.pile_to_cards = Game::init_piles(self.total_players);
 
-        let mut all_cards: Vec<Card> = (0..self.total_players)
+        let mut all_cards: Vec<Card> = (0..self.total_decks)
             .flat_map(|_x| Card::generate_deck(true))
             .collect();
         shuffle(&mut all_cards);

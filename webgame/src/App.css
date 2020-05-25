@@ -10,7 +10,12 @@ body {
 .card-back {
   width: 55px;
   height: 81px;
+  background-image: url(/resources/back.png);
   border-radius: 4px;
+  border-width: 0.5px;
+  border-color: #e43f5a;
+  position: absolute;
+  border-style: solid;
 }
 .card-back.small {
   width: 26px;
@@ -20,19 +25,30 @@ body {
 
 .hidden-pile .card {
   position: absolute;
-  background-color: #1f4068;
   min-width: 60px;
   min-height: 60px;
 }
 
 .hidden-pile {
+  display: inline-flex;
+  position: relative;
   margin: 12px;
+  padding: 3px;
+  background-color: #1f4068;
+  height: 83px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: #1b1b2f;
 }
 
 .visible-pile .card {
   position: absolute;
   width: 55px;
   height: 81px;
+
+  background-color: #1f4068;
+  height: 83px;
+  border: 1px;
 }
 
 .card {
