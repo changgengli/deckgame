@@ -10,6 +10,7 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
+
 #[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum Pile {
     Hand(u8),
@@ -58,7 +59,20 @@ impl<'de> Visitor<'de> for PileVisitor {
         E: Error,
     {
         let v = match v {
+            x if x.starts_with("hand#") => {
+                let pos = x.find("#").unwrap();
+                let num = &x[(pos + 1)..];
+                let p: u8 = num.parse::<u8>().unwrap();
+                Ok(Pile::Hand(p))
+            }
+            x if x.starts_with("discard_pile#") => Ok(Pile::DiscardPile(3)),
+            x if x.find("score_pile#[0-9]+") != None => Ok(Pile::ScorePile(3)),
+            x if x.starts_with("claim_pile#") => Ok(Pile::ClaimPile(3)),
+            x if x.starts_with("hidden_bury_pile#") => Ok(Pile::HiddenBuryPile(3)),
             "draw_pile" => Ok(Pile::DrawPile),
+            "reserved_pile" => Ok(Pile::ReservedPile),
+            "visible_bury_pile" => Ok(Pile::VisibleBuryPile),
+            "shared_score_pile" => Ok(Pile::SharedScorePile),
             _s => Err(E::custom(format!("illegal string: {}", v))),
         };
         v
@@ -530,6 +544,20 @@ impl Game {
 mod tests {
     use super::*;
     use tokio::sync::mpsc;
+
+    #[test]
+    fn test_pile_ser() {
+        let pile_hand = Pile::Hand(4);
+        let serialized = serde_json::to_string(&pile_hand).expect("err ser");
+        assert_eq!(serialized, "\"hand#4\"");
+    }
+
+    #[test]
+    fn test_pile_de() {
+        let pile_hand_str = "\"hand#4\"";
+        let hand: Pile = serde_json::from_str(&pile_hand_str).expect("err de");
+        assert_eq!(hand, Pile::Hand(4));
+    }
 
     #[test]
     fn test_pile() {
