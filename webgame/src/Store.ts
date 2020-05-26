@@ -4,6 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
 import { ConnectionStatus, GameInHall } from "./Types";
 import { stat } from "fs";
+import { CLICK_CARD, ClickCardAction } from "./Actions";
 
 interface HallState {
   players: string[];
@@ -190,6 +191,17 @@ function isPileSortable(name: string): boolean {
       return false;
   }
 }
+
+function getPileOrderBy(name: string): PileState["orderBy"] {
+  let n = name.split("#")[0];
+  switch (n) {
+    case "hand":
+      return "suitThenNumber";
+
+    default:
+      return "natural";
+  }
+}
 function merge(gameState: GameState | undefined, data: FullGame): GameState {
   let piles: GameState["piles"] = Object.fromEntries(
     Object.entries(data.piles_cards).map(([name, cards]) => {
@@ -210,7 +222,7 @@ function merge(gameState: GameState | undefined, data: FullGame): GameState {
                   gameState?.piles[name]?.orderBy ?? "natural"
                 ),
           sortable: isPileSortable(name),
-          orderBy: gameState?.piles[name]?.orderBy ?? "natural",
+          orderBy: gameState?.piles[name]?.orderBy ?? getPileOrderBy(name),
         },
       ];
     })
@@ -432,6 +444,26 @@ const rootReducer = (
     case "REDUX_WEBSOCKET::MESSAGE":
       return {
         ...message(state, action),
+      };
+    case CLICK_CARD:
+      let a = action as ClickCardAction;
+      let game = state.game as GameState;
+      let cards = [...game.piles[a.pile].cards];
+      cards[a.index].selected = !cards[a.index].selected;
+
+      return {
+        ...state,
+        game: {
+          ...game,
+          piles: {
+            ...game.piles,
+
+            [a.pile]: {
+              ...(game.piles[a.pile] as PileState),
+              cards,
+            },
+          },
+        },
       };
     case "DEBUG":
       return action;

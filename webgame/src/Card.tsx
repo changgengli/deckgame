@@ -29,7 +29,6 @@ export interface CardProps {
 }
 
 const Card: React.FunctionComponent<CardProps> = (props) => {
-  console.log("render card");
   let name;
   let s = Math.floor(props.value / 13);
   let num = (props.value % 13) + 1;
