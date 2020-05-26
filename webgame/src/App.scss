@@ -73,6 +73,7 @@ body {
 
 .visible-pile {
   @include pile();
+  height: $card-height * 2 + 20;
 }
 
 .hidden-pile .card-highlight {
@@ -80,7 +81,9 @@ body {
 }
 
 .visible-pile .card {
-  border: 1px;
+  width: $card-width * 2;
+  height: $card-height * 2;
+  border-radius: $card-height / 20;
 }
 
 .card {
@@ -99,8 +102,8 @@ body {
   background-color: $color-primary;
 }
 
-.hand-pile .card-highlight {
-  top: -20px;
+.visible-pile .card-highlight {
+  margin-top: -20px;
 }
 
 .hand-pile {

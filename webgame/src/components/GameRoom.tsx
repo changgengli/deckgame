@@ -3,6 +3,7 @@ import { State, GameState, PileState } from "../Store";
 import { connect } from "react-redux";
 import { send } from "@giantmachines/redux-websocket";
 import { Card, CardProps, Cardback } from "../Card";
+import { CLICK_CARD, ClickCardAction } from "../Actions";
 
 type clickPileCard = (pile: string, index: number, value: number) => void;
 
@@ -44,7 +45,7 @@ const VisiblePile: React.FunctionComponent<{
             highlight={c.selected}
             fullSize={true}
             onClick={(index, value) => clickCard(pile.name, index, value)}
-            nonOverLap={10}
+            nonOverLap={25}
           ></Card>
         ))}
       </div>
@@ -57,10 +58,6 @@ interface GamePlayerProps {
   totalPlayer: number;
   readyForNextGame: boolean;
   currentPlayerPosition: number;
-  hand: PileState;
-  discard: PileState;
-  score: PileState;
-  bury: PileState;
 }
 
 const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
@@ -93,7 +90,7 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
   const style = { top: x, left: y };
   let className = "player";
   let player = props.player ?? "<disconnected>";
-
+  let position = props.position;
   return (
     <div className={className} style={style}>
       <div className="head">
@@ -106,21 +103,25 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
         </div>
       </div>
       <div className="piles">
-        <HiddlePile title={`${player}·手牌`} pile={props.hand} />
+        <HiddenPileContainer
+          title={`${player}·手牌`}
+          name={`hand#${position}`}
+        />
 
-        <VisiblePile
-          clickCard={() => {}}
+        <VisiblePileContainer
           title={`${player}·得分`}
-          pile={props.score}
+          name={`score_pile#${position}`}
         />
 
-        <VisiblePile
-          clickCard={() => {}}
+        <VisiblePileContainer
           title={`${player}·出牌`}
-          pile={props.discard}
+          name={`discard_pile#${position}`}
         />
 
-        <HiddlePile title={`${player}·扣牌`} pile={props.bury} />
+        <HiddenPileContainer
+          title={`${player}·扣牌`}
+          name={`hidden_bury_pile#${position}`}
+        />
       </div>
     </div>
   );
@@ -129,18 +130,17 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
 const Me: React.FunctionComponent<{
   name: string;
   onClickReady: () => void;
+  position: number;
   readyForNextGame: boolean;
-  hand: PileState;
-  discard: PileState;
-  score: PileState;
-  bury: PileState;
-}> = ({ onClickReady, name, readyForNextGame, hand, discard, score, bury }) => {
+}> = ({ onClickReady, name, readyForNextGame, position }) => {
   return (
-    <div className={`me`} onClick={onClickReady}>
+    <div className={`me`}>
       <div className="head">
-        <div className="avatar" />
-        <div className="name">{name}</div>
-        <div className="check">
+        <div className="avatar" onClick={onClickReady} />
+        <div className="name" onClick={onClickReady}>
+          {name}
+        </div>
+        <div className="check" onClick={onClickReady}>
           {readyForNextGame ? (
             <span data-tooltip="Waiting for other players to start">☑</span>
           ) : (
@@ -149,13 +149,19 @@ const Me: React.FunctionComponent<{
         </div>
       </div>
       <div className="piles">
-        <VisiblePile clickCard={() => {}} title={`手牌`} pile={hand} />
+        <VisiblePileContainer title={`手牌`} name={`hand#${position}`} />
 
-        <VisiblePile title={`得分`} pile={score} clickCard={() => {}} />
+        <VisiblePileContainer title={`得分`} name={`score_pile#${position}`} />
 
-        <VisiblePile title={`出牌`} pile={discard} clickCard={() => {}} />
+        <VisiblePileContainer
+          title={`出牌`}
+          name={`discard_pile#${position}`}
+        />
 
-        <HiddlePile title={`扣牌`} pile={bury} />
+        <HiddenPileContainer
+          title={`扣牌`}
+          name={`hidden_bury_pile#${position}`}
+        />
       </div>
     </div>
   );
@@ -176,13 +182,9 @@ const GameRoom: React.FunctionComponent<{
               })}
           </div>
           <div className="center">
-            <VisiblePile
-              title="得分"
-              pile={game.piles["shared_score_pile"]}
-              clickCard={() => {}} // TODO
-            />
-            <HiddlePile title="底牌" pile={game.piles["reserved_pile"]} />
-            <HiddlePile title="牌堆" pile={game.piles["draw_pile"]} />
+            <VisiblePileContainer title="得分" name="shared_score_pile" />
+            <HiddenPileContainer title="底牌" name="reserved_pile" />
+            <HiddenPileContainer title="牌堆" name="draw_pile" />
           </div>
           <MeContainer />
         </div>
@@ -192,6 +194,36 @@ const GameRoom: React.FunctionComponent<{
   );
 };
 
+const VisiblePileContainer = connect(
+  (state: State, props: { name: string; title: string }) => {
+    return {
+      title: props.title,
+      pile: state.game?.piles[props.name] as PileState,
+    };
+  },
+  (dispatch) => {
+    return {
+      clickCard: (pile: string, index: number, value: number): void => {
+        let action: ClickCardAction = {
+          type: CLICK_CARD,
+          pile,
+          index,
+          value,
+        };
+        dispatch(action);
+      },
+    };
+  }
+)(VisiblePile);
+
+const HiddenPileContainer = connect(
+  (state: State, props: { name: string; title: string }) => {
+    return {
+      title: props.title,
+      pile: state.game?.piles[props.name] as PileState,
+    };
+  }
+)(HiddlePile);
 const MeContainer = connect(
   (state: State) => {
     let game = state.game as GameState;
@@ -199,13 +231,9 @@ const MeContainer = connect(
     return {
       name: game.players[position] as string,
       postion: position,
-      currentPlayerPosition: game.position,
-      hand: game.piles[`hand#${position}`],
-      score: game.piles[`score_pile#${position}`],
+      position: game.position,
       totalPlayer: game.players.length,
       readyForNextGame: game.players_ready[position],
-      discard: game.piles[`discard_pile#${position}`],
-      bury: game.piles[`hidden_bury_pile#${position}`],
     };
   },
   (dispatch) => {
