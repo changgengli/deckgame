@@ -5,10 +5,12 @@ use crate::message::Response::*;
 use crate::player::Player;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::de::{Error, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::Arc;
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Deserialize)]
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum Pile {
     Hand(u8),
     DiscardPile(u8),
@@ -39,6 +41,36 @@ impl Serialize for Pile {
             SharedScorePile => "shared_score_pile".to_owned(),
         };
         serializer.serialize_str(&s)
+    }
+}
+
+struct PileVisitor;
+
+impl<'de> Visitor<'de> for PileVisitor {
+    type Value = Pile;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("A serialized Pile enum in str format.")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        let v = match v {
+            "draw_pile" => Ok(Pile::DrawPile),
+            _s => Err(E::custom(format!("illegal string: {}", v))),
+        };
+        v
+    }
+}
+
+impl<'de> Deserialize<'de> for Pile {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(PileVisitor)
     }
 }
 
