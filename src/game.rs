@@ -58,17 +58,19 @@ impl<'de> Visitor<'de> for PileVisitor {
     where
         E: Error,
     {
+        fn get_number(s: &str) -> u8 {
+            let pos = s.find('#').unwrap();
+            let num = &s[(pos + 1)..];
+            let p: u8 = num.parse::<u8>().unwrap();
+            p
+        }
+
         let v = match v {
-            x if x.starts_with("hand#") => {
-                let pos = x.find("#").unwrap();
-                let num = &x[(pos + 1)..];
-                let p: u8 = num.parse::<u8>().unwrap();
-                Ok(Pile::Hand(p))
-            }
-            x if x.starts_with("discard_pile#") => Ok(Pile::DiscardPile(3)),
-            x if x.find("score_pile#[0-9]+") != None => Ok(Pile::ScorePile(3)),
-            x if x.starts_with("claim_pile#") => Ok(Pile::ClaimPile(3)),
-            x if x.starts_with("hidden_bury_pile#") => Ok(Pile::HiddenBuryPile(3)),
+            s if s.starts_with("hand#") => Ok(Pile::Hand(get_number(s))),
+            s if s.starts_with("discard_pile#") => Ok(Pile::DiscardPile(get_number(s))),
+            s if s.starts_with("score_pile#") => Ok(Pile::ScorePile(get_number(s))),
+            s if s.starts_with("claim_pile#") => Ok(Pile::ClaimPile(get_number(s))),
+            s if s.starts_with("hidden_bury_pile#") => Ok(Pile::HiddenBuryPile(get_number(s))),
             "draw_pile" => Ok(Pile::DrawPile),
             "reserved_pile" => Ok(Pile::ReservedPile),
             "visible_bury_pile" => Ok(Pile::VisibleBuryPile),
@@ -554,9 +556,24 @@ mod tests {
 
     #[test]
     fn test_pile_de() {
-        let pile_hand_str = "\"hand#4\"";
-        let hand: Pile = serde_json::from_str(&pile_hand_str).expect("err de");
-        assert_eq!(hand, Pile::Hand(4));
+        let hand_pile: Pile = serde_json::from_str("\"hand#4\"").expect("err de hand_pile");
+        assert_eq!(hand_pile, Pile::Hand(4));
+
+        let discard_pile: Pile =
+            serde_json::from_str("\"discard_pile#1\"").expect("err de deiscard_pile");
+        assert_eq!(discard_pile, Pile::DiscardPile(1));
+
+        let score_pile: Pile =
+            serde_json::from_str("\"score_pile#22\"").expect("err de score_pile");
+        assert_eq!(score_pile, Pile::ScorePile(22));
+
+        let claim_pile: Pile =
+            serde_json::from_str("\"claim_pile#33\"").expect("err de claim_pile");
+        assert_eq!(claim_pile, Pile::ClaimPile(33));
+
+        let hidden_bury_pile: Pile =
+            serde_json::from_str("\"hidden_bury_pile#44\"").expect("err de hidden_bury_pile");
+        assert_eq!(hidden_bury_pile, Pile::HiddenBuryPile(44));
     }
 
     #[test]
