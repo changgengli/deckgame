@@ -29,6 +29,7 @@ export interface CardProps {
 }
 
 const Card: React.FunctionComponent<CardProps> = (props) => {
+  console.log("render card");
   let name;
   let s = Math.floor(props.value / 13);
   let num = (props.value % 13) + 1;
@@ -52,7 +53,7 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
         className={`card ${suit} ${highlight} card-age-${props.age ?? "old"}`}
         src={"resources/" + name + ".png"}
         alt={name}
-        style={{ left: props.index * props.nonOverLap }}
+        style={{ marginLeft: props.index * props.nonOverLap }}
         onClick={(event: React.MouseEvent<HTMLElement>) =>
           props.onClick(props.index, props.value)
         }
@@ -91,12 +92,28 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
   }
 };
 
-const Cardback: React.FunctionComponent<{ index: number }> = ({ index }) => {
+function calculateMargin(index: number, total: number, margin: number): number {
+  if (total <= 5) {
+    return index * margin;
+  }
+  let shrinkCount = total - 5;
+  let shrink = Math.max(margin / 3, 2);
+  if (index < shrinkCount) {
+    return shrink * index;
+  }
+
+  return shrinkCount * shrink + margin * (index - shrinkCount);
+}
+
+const Cardback: React.FunctionComponent<{ index: number; total: number }> = ({
+  index,
+  total,
+}) => {
   return (
     <div
-      className="card-back"
+      className="card-back card"
       style={{
-        left: index * 4,
+        marginLeft: calculateMargin(index, total, 4),
       }}
     ></div>
   );

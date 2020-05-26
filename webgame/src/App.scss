@@ -1,71 +1,102 @@
+$color-primary: #ececec;
+$color-background: #222831;
+$color-background-secondary: #30475e;
+
+$color-accent: #f2a365;
+$color-secondary: #5a1321;
+$color-foreground: #191919;
+
+$hall-background: #1f4068;
+$game-table-background: #0f4c75;
+
+$game-table-size: 150px;
+
+// ---- tooltip -- //
+$tool-tip-background: $color-background;
+
+// ---- card --- //
+$card-width: 55px;
+$card-height: 81px;
+
+$card-scale-small: 0.6;
+
 body {
-  background-color: #162447;
-  color: #e43f5a;
+  background-color: $color-background;
+  color: $color-primary;
+  font-size: 24px;
 }
 
 .App {
   display: flex;
   justify-content: center;
 }
-.card-back {
-  width: 55px;
-  height: 81px;
-  background-image: url(/resources/back.png);
-  border-radius: 4px;
-  border-width: 0.5px;
-  border-color: #e43f5a;
-  position: absolute;
-  border-style: solid;
+
+.player .head {
+  display: flex;
 }
-.card-back.small {
-  width: 26px;
-  height: 40px;
-  border-radius: 2px;
+.player .piles {
+  display: flex;
+}
+@mixin pile {
+  // display: inline-flex;
+  margin: 12px;
+  padding: 3px;
+  background-color: $color-background-secondary;
+  height: $card-height + 20px;
+  // width: $card-width + 20px;
+  border-width: 0.5px;
+  border-style: solid;
+  border-color: $color-accent;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
 }
 
-.hidden-pile .card {
-  position: absolute;
-  min-width: 60px;
-  min-height: 60px;
+.title {
+  display: block;
+}
+.summary {
+  display: block;
+}
+
+.card-list {
+  display: grid;
+  grid: $card-height / auto;
+  // height: $card-height + 2;
+  // display: flex;
+  // flex-direction: row;
 }
 
 .hidden-pile {
-  display: inline-flex;
-  position: relative;
-  margin: 12px;
-  padding: 3px;
-  background-color: #1f4068;
-  height: 83px;
-  border-width: 1px;
-  border-style: solid;
-  border-color: #1b1b2f;
+  @include pile();
+}
+
+.visible-pile {
+  @include pile();
+}
+
+.hidden-pile .card-highlight {
+  border-width: 1.5px;
 }
 
 .visible-pile .card {
-  position: absolute;
-  width: 55px;
-  height: 81px;
-
-  background-color: #1f4068;
-  height: 83px;
   border: 1px;
 }
 
 .card {
-  background-color: azure;
-  border: #1f4068 0.5px solid;
-  border-radius: 8px;
+  border: $color-secondary 0.5px solid;
+  border-radius: $card-height/20;
+  grid-area: 1 / 1 / 2 / 2;
+  width: $card-width;
+  height: $card-height;
+  background-color: white;
 }
 
+.card-back {
+  background-image: url(/resources/back.png);
+}
 .card-highlight {
-  background-color: #e43f5a;
-}
-
-.hand-pile .card {
-  position: absolute;
-  width: 111px;
-  height: 162px;
-  border-radius: 8px;
+  background-color: $color-primary;
 }
 
 .hand-pile .card-highlight {
@@ -87,7 +118,7 @@ body {
 
 .game-room-outer {
   display: inline-flex;
-  background-color: #162447;
+  background-color: $color-background;
   width: 1400px;
   height: 1160px;
   align-items: center;
@@ -103,30 +134,30 @@ body {
 
 .messages {
   display: inline-flex;
-  background-color: #1b1b2f;
-  color: bisque;
+  background-color: $color-background-secondary;
+  color: $color-primary;
 }
 
 .hall {
   /* min-height: 640px; */
-  background-color: #1f4068;
+  background-color: $hall-background;
   width: 960px;
 }
 
 .hall .create-game {
-  width: 302px;
-  height: 302px; /* border */
-  background-color: #162447;
+  width: 2 * $game-table-size + 2;
+  height: 2 * $game-table-size + 2; /* border */
+  background-color: $game-table-background;
   margin: 25px;
   justify-content: space-around;
   align-items: center;
   display: inline-flex;
 }
 .hall .create-game .cross {
-  background: #e43f5a;
-  height: 100px;
+  background: $color-primary;
+  height: $game-table-size * 2 / 3;
   position: relative;
-  width: 20px;
+  width: $game-table-size / 6;
 }
 .hall .game-list {
   flex-direction: row;
@@ -137,13 +168,13 @@ body {
 }
 
 .hall .create-game .cross:after {
-  background: #e43f5a;
+  background: $color-primary;
   content: "";
-  height: 20px;
-  left: -40px;
+  height: $game-table-size/6;
+  left: -1 * $game-table-size / 4;
   position: absolute;
-  top: 40px;
-  width: 100px;
+  top: $game-table-size / 4;
+  width: $game-table-size * 2 /3;
 }
 
 .hall .create-game .row {
@@ -153,9 +184,9 @@ body {
 
 .game-table-outer {
   position: relative;
-  width: 302px;
-  height: 302px; /* border */
-  background-color: #162447;
+  width: 2 * $game-table-size + 2;
+  height: 2 * $game-table-size + 2;
+  background-color: $game-table-background;
   margin: 25px;
   display: inline-flex;
 }
@@ -164,7 +195,7 @@ body {
   position: absolute;
   width: 40px;
   height: 40px;
-  color: #1f4068;
+  color: $color-primary;
   border-radius: 1px;
 }
 
@@ -173,10 +204,11 @@ body {
   font-size: 14px;
   line-height: 14px;
   text-align: center;
-  color: #e43f5a;
+  color: $color-primary;
 }
+
 .game-table-outer .player .avatar {
-  background-color: #e43f5a;
+  background-color: $color-primary;
   border-radius: 6px;
   width: 40px;
   height: 25px;
@@ -195,7 +227,7 @@ body {
 }
 
 .game-table-outer .player.selected {
-  border: 1px solid #e43f5a;
+  border: 1px solid $color-primary;
   cursor: default;
 }
 
@@ -203,8 +235,8 @@ body {
   position: absolute;
   top: 75px;
   left: 75px;
-  width: 150px;
-  height: 150px;
+  width: $game-table-size;
+  height: $game-table-size;
   background-image: url(/light-wood.jpg);
   border-radius: 75px;
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
@@ -215,29 +247,29 @@ body {
 
 .game-table .top {
   position: absolute;
-  width: 150px;
-  height: 75px;
-  line-height: 75px;
-  /* border-bottom: #e43f5a 1px solid; */
+  width: $game-table-size;
+  height: $game-table-size/2;
+  line-height: $game-table-size / 2;
+  /* border-bottom: $color-primary 1px solid; */
   /* color: blanchedalmond; */
   font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
   font-size: 24px;
   text-align: center;
-  color: #1b1b2f;
+  color: $color-secondary;
 }
 
 .game-table .bottom {
   position: absolute;
-  width: 150px;
-  height: 75px;
-  top: 75px;
+  width: $game-table-size;
+  height: $game-table-size/2;
+  top: $game-table-size/2;
   left: 0px;
   line-height: 50px;
   vertical-align: top;
   font-size: 28px;
   font-weight: bold;
-  color: #162447;
-  border-top: #1b1b2f solid 2px;
+  color: $color-background;
+  border-top: $color-accent solid 2px;
   text-align: center;
 }
 
@@ -248,18 +280,18 @@ body {
   width: 150px;
   height: 150px;
   padding-top: 60px;
-  padding-left: 45px;
+  padding-left: 50px;
 }
 
 .game-table .join-button {
   border-radius: 6px;
-  height: 25px;
+  height: 30px;
   vertical-align: middle;
-  font-size: 10px;
-  color: #e43f5a;
-  background-color: #1f4068;
-  padding-left: 10px;
-  padding-right: 10px;
+  font-size: 14px;
+  color: $color-primary;
+  background-color: $color-background-secondary;
+  padding: 6px;
+  // padding-right: 10px;
 }
 
 .connection-indicator {
@@ -292,7 +324,7 @@ body {
 .current-user {
   margin-left: 18px;
   display: inline-flex;
-  font-size: 24px;
+  // font-size: 24px;
 }
 
 .current-user.not-login {
@@ -305,11 +337,10 @@ body {
   /* padding-top: 8px; */
   height: 28px;
   /* margin: 12px; */
-
   min-width: 720px;
   padding: 6px;
   display: flex;
-  background-color: #1b1b2f;
+  background-color: $color-background-secondary;
   justify-content: space-around;
   align-items: center;
 }
@@ -325,8 +356,8 @@ body {
 [data-tooltip]:before,
 [data-tooltip]:after {
   visibility: hidden;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=0);
+  // -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: "progid: DXImageTransform.Microsoft.Alpha(Opacity=0)";
   opacity: 0;
   pointer-events: none;
 }
@@ -343,12 +374,12 @@ body {
   -webkit-border-radius: 3px;
   -moz-border-radius: 3px;
   border-radius: 3px;
-  background-color: #1f4068;
+  background-color: $tool-tip-background;
   /* background-color: hsla(0, 0%, 20%, 0.9); */
-  color: #e43f5a;
+  color: $color-primary;
   content: attr(data-tooltip);
   text-align: center;
-  font-size: 14px;
+  // font-size: 14px;
   line-height: 1.2;
 }
 
@@ -359,8 +390,7 @@ body {
   left: 50%;
   margin-left: -5px;
   width: 0;
-  border-top: 5px solid #1f4068;
-  /* border-top: 5px solid hsla(0, 0%, 20%, 0.9); */
+  border-top: 5px solid $color-accent;
   border-right: 5px solid transparent;
   border-left: 5px solid transparent;
   content: " ";
@@ -372,7 +402,6 @@ body {
 [data-tooltip]:hover:before,
 [data-tooltip]:hover:after {
   visibility: visible;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-  filter: progid: DXImageTransform.Microsoft.Alpha(Opacity=100);
+  filter: "progid: DXImageTransform.Microsoft.Alpha(Opacity=100)";
   opacity: 1;
 }

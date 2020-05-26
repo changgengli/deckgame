@@ -12,6 +12,7 @@ type Hall = Arc<RwLock<hall::Hall>>;
 type Game = Arc<RwLock<game::Game>>;
 type Player = Arc<player::Player>;
 type TX = mpsc::UnboundedSender<Result<Message, warp::Error>>;
+use time::Interval;
 use tokio::time::{self, Duration};
 
 #[derive(Clone, Debug)]
@@ -179,15 +180,17 @@ impl Session {
 
         if waiting == 0 {
             let game = self.game.as_ref().unwrap().clone();
+            let mut interval = time::interval(Duration::from_millis(200));
             tokio::spawn(async move {
                 let weak_game: Weak<RwLock<game::Game>> = Arc::downgrade(&game);
                 drop(game);
-                Session::deal_cards(weak_game).await;
+                interval.tick().await;
+                Session::deal_cards(weak_game, interval).await;
             });
         }
     }
 
-    async fn deal_cards(game: Weak<RwLock<game::Game>>) {
+    async fn deal_cards(game: Weak<RwLock<game::Game>>, mut interval: Interval) {
         let mut has_more = true;
         while has_more {
             has_more = match game.upgrade() {
@@ -196,7 +199,6 @@ impl Session {
             };
 
             if has_more {
-                let mut interval = time::interval(Duration::from_millis(300));
                 interval.tick().await;
             } else {
                 print!("Game stopped or no more card to deal");
