@@ -5,10 +5,13 @@ use crate::message::Response::*;
 use crate::player::Player;
 use rand::prelude::*;
 use rand::seq::SliceRandom;
-use serde::{Deserialize, Serialize, Serializer};
+use serde::de::{Error, Visitor};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::collections::HashMap;
+use std::fmt;
 use std::sync::Arc;
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash, Deserialize)]
+
+#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
 pub enum Pile {
     Hand(u8),
     DiscardPile(u8),
@@ -39,6 +42,51 @@ impl Serialize for Pile {
             SharedScorePile => "shared_score_pile".to_owned(),
         };
         serializer.serialize_str(&s)
+    }
+}
+
+struct PileVisitor;
+
+impl<'de> Visitor<'de> for PileVisitor {
+    type Value = Pile;
+
+    fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        formatter.write_str("A serialized Pile enum in str format.")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: Error,
+    {
+        fn get_number(s: &str) -> u8 {
+            let pos = s.find('#').unwrap();
+            let num = &s[(pos + 1)..];
+            let p: u8 = num.parse::<u8>().unwrap();
+            p
+        }
+
+        let v = match v {
+            s if s.starts_with("hand#") => Ok(Pile::Hand(get_number(s))),
+            s if s.starts_with("discard_pile#") => Ok(Pile::DiscardPile(get_number(s))),
+            s if s.starts_with("score_pile#") => Ok(Pile::ScorePile(get_number(s))),
+            s if s.starts_with("claim_pile#") => Ok(Pile::ClaimPile(get_number(s))),
+            s if s.starts_with("hidden_bury_pile#") => Ok(Pile::HiddenBuryPile(get_number(s))),
+            "draw_pile" => Ok(Pile::DrawPile),
+            "reserved_pile" => Ok(Pile::ReservedPile),
+            "visible_bury_pile" => Ok(Pile::VisibleBuryPile),
+            "shared_score_pile" => Ok(Pile::SharedScorePile),
+            _s => Err(E::custom(format!("illegal string: {}", v))),
+        };
+        v
+    }
+}
+
+impl<'de> Deserialize<'de> for Pile {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        deserializer.deserialize_any(PileVisitor)
     }
 }
 
@@ -498,6 +546,35 @@ impl Game {
 mod tests {
     use super::*;
     use tokio::sync::mpsc;
+
+    #[test]
+    fn test_pile_ser() {
+        let pile_hand = Pile::Hand(4);
+        let serialized = serde_json::to_string(&pile_hand).expect("err ser");
+        assert_eq!(serialized, "\"hand#4\"");
+    }
+
+    #[test]
+    fn test_pile_de() {
+        let hand_pile: Pile = serde_json::from_str("\"hand#4\"").expect("err de hand_pile");
+        assert_eq!(hand_pile, Pile::Hand(4));
+
+        let discard_pile: Pile =
+            serde_json::from_str("\"discard_pile#1\"").expect("err de deiscard_pile");
+        assert_eq!(discard_pile, Pile::DiscardPile(1));
+
+        let score_pile: Pile =
+            serde_json::from_str("\"score_pile#22\"").expect("err de score_pile");
+        assert_eq!(score_pile, Pile::ScorePile(22));
+
+        let claim_pile: Pile =
+            serde_json::from_str("\"claim_pile#33\"").expect("err de claim_pile");
+        assert_eq!(claim_pile, Pile::ClaimPile(33));
+
+        let hidden_bury_pile: Pile =
+            serde_json::from_str("\"hidden_bury_pile#44\"").expect("err de hidden_bury_pile");
+        assert_eq!(hidden_bury_pile, Pile::HiddenBuryPile(44));
+    }
 
     #[test]
     fn test_pile() {
