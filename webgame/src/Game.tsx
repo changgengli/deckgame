@@ -1,5 +1,4 @@
 import React, { Component, useEffect } from "react";
-import { Hand } from "./Pile";
 import { Hall } from "./Hall";
 import { Provider } from "react-redux";
 import { store, State } from "./Store";

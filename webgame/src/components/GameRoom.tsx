@@ -12,6 +12,8 @@ import {
   DragSourceMonitor,
   DragSourceCollector,
   DragSourceConnector,
+  DropTargetMonitor,
+  useDrag,
 } from "react-dnd";
 import HTML5Backend from "react-dnd-html5-backend";
 
@@ -20,19 +22,71 @@ type clickPileCard = (pile: string, index: number, value: number) => void;
 const HiddlePile: React.FunctionComponent<{
   pile: PileState;
   title: string;
-}> = ({ pile, title }) => {
+
+  onMoveCard: (
+    source: string,
+    destination: string,
+    cards: number[] | undefined
+  ) => void;
+}> = ({ pile, title, onMoveCard }) => {
+  const [connectedDropProps, drop] = useDrop({
+    accept: ItemTypes.PILE,
+    drop: (item: { type: string; pile: PileState }, monitor) => {
+      console.log(`Dropping`, item, ` to ${pile.name}`, monitor);
+      if (item === undefined) {
+        console.log("not an item dragged");
+        return;
+      }
+      onMoveCard(
+        item.pile.name,
+        pile.name,
+
+        item.pile.cards.length === 0
+          ? undefined
+          : item.pile.cards.filter((c) => c.selected).map((c) => c.value)
+      );
+    },
+    // hover: (item, monitor) =>
+    //   console.log(`Hovering`, item, ` to ${pile.name}`, monitor),
+    collect: (monitor: DropTargetMonitor) => {
+      return {
+        item: monitor.getItem,
+      };
+    },
+  });
+
+  const [{ opacity }, dragRef] = useDrag({
+    item: { type: ItemTypes.PILE, pile },
+    collect: (monitor) => ({
+      opacity: monitor.isDragging() ? 0.5 : 1,
+    }),
+
+    begin: (monitor) => console.log("begin dragging", monitor.getItem()),
+    end: (item: { type: string; pile: PileState } | undefined, monitor) => {
+      console.log("end dragging", item);
+    },
+    canDrag: (monitor) => pile.count !== 0,
+  });
+
   return (
-    <div className="hidden-pile">
-      <div className="title">
-        {title}
-        {pile.count === 0 ? "" : `·${pile.count}`}
-      </div>
-      <div className="card-list">
-        {Array(pile.count)
-          .fill(1)
-          .map((_, i) => (
-            <Cardback index={i} key={`${pile.name}-${i}`} total={pile.count} />
-          ))}
+    <div ref={drop}>
+      {" "}
+      <div ref={dragRef} className="hidden-pile">
+        <div className="title">
+          {title}
+          {pile.count === 0 ? "" : `·${pile.count}`}
+        </div>
+        <div className="card-list">
+          {Array(pile.count)
+            .fill(1)
+            .map((_, i) => (
+              <Cardback
+                index={i}
+                key={`${pile.name}-${i}`}
+                total={pile.count}
+              />
+            ))}
+        </div>
       </div>
     </div>
   );
@@ -42,33 +96,77 @@ interface PileProps {
   pile: PileState;
   clickCard: clickPileCard;
   title: string;
+
+  onMoveCard: (
+    source: string,
+    destination: string,
+    cards: number[] | undefined
+  ) => void;
 }
 const VisiblePile: React.FunctionComponent<PileProps> = ({
   pile,
   clickCard,
   title,
+  onMoveCard,
 }) => {
-  // const [, drop] = useDrop({
-  //   accept: ItemTypes.CARD,
-  //   drop: () => moveKnight(x, y),
-  // });
+  const [connectedDropProps, drop] = useDrop({
+    accept: ItemTypes.PILE,
+    drop: (item: { type: string; pile: PileState }, monitor) => {
+      console.log(`Dropping`, item, ` to ${pile.name}`, monitor);
+      if (item === undefined) {
+        console.log("not an item dragged");
+        return;
+      }
+
+      onMoveCard(
+        item.pile.name,
+        pile.name,
+        item.pile.cards.length === 0
+          ? undefined
+          : item.pile.cards.filter((c) => c.selected).map((c) => c.value)
+      );
+    },
+    // hover: (item, monitor) =>
+    // console.log(`hovering`, item, ` to ${pile.name}`, monitor),
+    collect: (monitor: DropTargetMonitor) => {
+      return {
+        item: monitor.getItem,
+      };
+    },
+  });
+
+  const [{ opacity }, dragRef] = useDrag({
+    item: { type: ItemTypes.PILE, pile },
+    collect: (monitor) => ({
+      opacity: monitor.isDragging() ? 0.5 : 1,
+    }),
+
+    begin: (monitor) => console.log("begin dragging", monitor.getItem()),
+    end: (item: { type: string; pile: PileState } | undefined, monitor) => {
+      console.log("end dragging", item);
+    },
+    canDrag: (monitor) =>
+      pile.cards.map((c) => c.selected).find((x) => x) !== undefined,
+  });
 
   return (
-    <div className="visible-pile">
-      <div className="tile">{title}</div>
+    <div ref={drop}>
+      <div className="visible-pile" ref={dragRef}>
+        <div className="tile">{title}</div>
 
-      <div className="card-list">
-        {pile.cards.map((c, i) => (
-          <Card
-            key={`${pile.name}-${i}`}
-            index={i}
-            value={c.value}
-            highlight={c.selected}
-            fullSize={true}
-            onClick={(index, value) => clickCard(pile.name, index, value)}
-            nonOverLap={25}
-          ></Card>
-        ))}
+        <div className="card-list">
+          {pile.cards.map((c, i) => (
+            <Card
+              key={`${pile.name}-${i}`}
+              index={i}
+              value={c.value}
+              highlight={c.selected}
+              fullSize={true}
+              onClick={(index, value) => clickCard(pile.name, index, value)}
+              nonOverLap={25}
+            ></Card>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -217,50 +315,50 @@ const GameRoom: React.FunctionComponent<{
   );
 };
 
-interface PileDragObject {
-  pile: string;
-  cards: number[];
-}
-let pileSource: DragSourceSpec<PileProps, PileDragObject> = {
-  beginDrag(props: PileProps) {
-    // Return the data describing the dragged item
-    return {
-      pile: props.pile.name,
-      cards: props.pile.cards.filter((c) => c.selected).map((c) => c.value),
-    };
-  },
+// interface PileDragObject {
+//   pile: string;
+//   cards: number[];
+// }
+// let pileSource: DragSourceSpec<PileProps, PileDragObject> = {
+//   beginDrag(props: PileProps) {
+//     // Return the data describing the dragged item
+//     return {
+//       pile: props.pile.name,
+//       cards: props.pile.cards.filter((c) => c.selected).map((c) => c.value),
+//     };
+//   },
 
-  endDrag(props: PileProps, monitor: DragSourceMonitor, component: any) {
-    if (!monitor.didDrop()) {
-      return;
-    }
+//   endDrag(props: PileProps, monitor: DragSourceMonitor, component: any) {
+//     if (!monitor.didDrop()) {
+//       return;
+//     }
 
-    // // When dropped on a compatible target, do something
-    const item = monitor.getItem();
-    const dropResult = monitor.getDropResult();
-    console.log("drop from ", item, dropResult);
-    //TODO dispatch move card message
-    // CardActions.moveCardToList(item.id, dropResult.listId)
-  },
+//     // // When dropped on a compatible target, do something
+//     const item = monitor.getItem();
+//     const dropResult = monitor.getDropResult();
+//     console.log("drop from ", item, dropResult);
+//     //TODO dispatch move card message
+//     // CardActions.moveCardToList(item.id, dropResult.listId)
+//   },
 
-  canDrag(props: PileProps, monitor: DragSourceMonitor) {
-    return props.pile.cards.filter((c) => c.selected).length !== 0;
-  },
-};
+//   canDrag(props: PileProps, monitor: DragSourceMonitor) {
+//     return props.pile.cards.filter((c) => c.selected).length !== 0;
+//   },
+// };
 
-//  DragSourceCollector<CollectedProps, TargetProps> =
-// (connect: DragSourceConnector, monitor: DragSourceMonitor, props: TargetProps) => CollectedProps;
+// //  DragSourceCollector<CollectedProps, TargetProps> =
+// // (connect: DragSourceConnector, monitor: DragSourceMonitor, props: TargetProps) => CollectedProps;
 
-let pileCollect: DragSourceCollector<CollectedProps, RequiredProps> = (
-  connect: DragSourceConnector,
-  monitor: DragSourceMonitor,
-  props: any
-) => {
-  return {
-    connectDragSource: connect.dragSource,
-    connect,
-  };
-};
+// let pileCollect: DragSourceCollector<CollectedProps, RequiredProps> = (
+//   connect: DragSourceConnector,
+//   monitor: DragSourceMonitor,
+//   props: any
+// ) => {
+//   return {
+//     connectDragSource: connect.dragSource,
+//     connect,
+//   };
+// };
 
 const VisiblePileContainer = connect(
   (state: State, props: { name: string; title: string }) => {
@@ -280,15 +378,52 @@ const VisiblePileContainer = connect(
         };
         dispatch(action);
       },
+
+      onMoveCard: (
+        source: string,
+        destination: string,
+        cards: number[] | undefined
+      ) => {
+        dispatch(
+          send({
+            type: cards === undefined ? "MoveAllCard" : "MoveCard",
+            source,
+            destination,
+            cards: cards,
+          })
+        );
+      },
     };
   }
-)(DragSource(ItemTypes.PILE, pileSource, pileCollect)(VisiblePile));
+)(
+  // DragSource(ItemTypes.PILE, pileSource, pileCollect)(
+  VisiblePile
+  //)
+);
 
 const HiddenPileContainer = connect(
   (state: State, props: { name: string; title: string }) => {
     return {
       title: props.title,
       pile: state.game?.piles[props.name] as PileState,
+    };
+  },
+  (dispatch) => {
+    return {
+      onMoveCard: (
+        source: string,
+        destination: string,
+        cards: number[] | undefined
+      ) => {
+        dispatch(
+          send({
+            type: cards === undefined ? "MoveAllCard" : "MoveCard",
+            source,
+            destination,
+            cards: cards,
+          })
+        );
+      },
     };
   }
 )(HiddlePile);
