@@ -1,9 +1,19 @@
 import React, { useState, MouseEvent } from "react";
-import { State, GameState, PileState } from "../Store";
+import { State, GameState, PileState, ItemTypes } from "../Store";
 import { connect } from "react-redux";
 import { send } from "@giantmachines/redux-websocket";
 import { Card, CardProps, Cardback } from "../Card";
 import { CLICK_CARD, ClickCardAction } from "../Actions";
+import {
+  DndProvider,
+  useDrop,
+  DragSource,
+  DragSourceSpec,
+  DragSourceMonitor,
+  DragSourceCollector,
+  DragSourceConnector,
+} from "react-dnd";
+import HTML5Backend from "react-dnd-html5-backend";
 
 type clickPileCard = (pile: string, index: number, value: number) => void;
 
@@ -27,11 +37,22 @@ const HiddlePile: React.FunctionComponent<{
     </div>
   );
 };
-const VisiblePile: React.FunctionComponent<{
+
+interface PileProps {
   pile: PileState;
   clickCard: clickPileCard;
   title: string;
-}> = ({ pile, clickCard, title }) => {
+}
+const VisiblePile: React.FunctionComponent<PileProps> = ({
+  pile,
+  clickCard,
+  title,
+}) => {
+  // const [, drop] = useDrop({
+  //   accept: ItemTypes.CARD,
+  //   drop: () => moveKnight(x, y),
+  // });
+
   return (
     <div className="visible-pile">
       <div className="tile">{title}</div>
@@ -171,27 +192,74 @@ const GameRoom: React.FunctionComponent<{
 }> = ({ game }) => {
   const [id, setId] = useState("");
   return (
-    <div className="game-window">
-      <div className="game-room-outer">
-        <div className="game-room">
-          <div className="player-list">
-            {game.players
-              .filter((_, index) => index !== game.position)
-              .map((player, index) => {
-                return <GamePlayerContainer position={index} />;
-              })}
+    <DndProvider backend={HTML5Backend}>
+      <div className="game-window">
+        <div className="game-room-outer">
+          <div className="game-room">
+            <div className="player-list">
+              {game.players
+                .filter((_, index) => index !== game.position)
+                .map((player, index) => {
+                  return <GamePlayerContainer position={index} />;
+                })}
+            </div>
+            <div className="center">
+              <VisiblePileContainer title="得分" name="shared_score_pile" />
+              <HiddenPileContainer title="底牌" name="reserved_pile" />
+              <HiddenPileContainer title="牌堆" name="draw_pile" />
+            </div>
+            <MeContainer />
           </div>
-          <div className="center">
-            <VisiblePileContainer title="得分" name="shared_score_pile" />
-            <HiddenPileContainer title="底牌" name="reserved_pile" />
-            <HiddenPileContainer title="牌堆" name="draw_pile" />
-          </div>
-          <MeContainer />
         </div>
+        <div className="messages"></div>
       </div>
-      <div className="messages"></div>
-    </div>
+    </DndProvider>
   );
+};
+
+interface PileDragObject {
+  pile: string;
+  cards: number[];
+}
+let pileSource: DragSourceSpec<PileProps, PileDragObject> = {
+  beginDrag(props: PileProps) {
+    // Return the data describing the dragged item
+    return {
+      pile: props.pile.name,
+      cards: props.pile.cards.filter((c) => c.selected).map((c) => c.value),
+    };
+  },
+
+  endDrag(props: PileProps, monitor: DragSourceMonitor, component: any) {
+    if (!monitor.didDrop()) {
+      return;
+    }
+
+    // // When dropped on a compatible target, do something
+    const item = monitor.getItem();
+    const dropResult = monitor.getDropResult();
+    console.log("drop from ", item, dropResult);
+    //TODO dispatch move card message
+    // CardActions.moveCardToList(item.id, dropResult.listId)
+  },
+
+  canDrag(props: PileProps, monitor: DragSourceMonitor) {
+    return props.pile.cards.filter((c) => c.selected).length !== 0;
+  },
+};
+
+//  DragSourceCollector<CollectedProps, TargetProps> =
+// (connect: DragSourceConnector, monitor: DragSourceMonitor, props: TargetProps) => CollectedProps;
+
+let pileCollect: DragSourceCollector<CollectedProps, RequiredProps> = (
+  connect: DragSourceConnector,
+  monitor: DragSourceMonitor,
+  props: any
+) => {
+  return {
+    connectDragSource: connect.dragSource,
+    connect,
+  };
 };
 
 const VisiblePileContainer = connect(
@@ -214,7 +282,7 @@ const VisiblePileContainer = connect(
       },
     };
   }
-)(VisiblePile);
+)(DragSource(ItemTypes.PILE, pileSource, pileCollect)(VisiblePile));
 
 const HiddenPileContainer = connect(
   (state: State, props: { name: string; title: string }) => {

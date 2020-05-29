@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "./Card";
-
+/*
 interface HandProps {
   cards: number[];
   trumpNumber: number | undefined;
@@ -45,6 +45,7 @@ const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
   });
   return <div className="dicard-pile">{cards}</div>;
 };
+*/
 
 /*
  Hand(p) => format!("hand_{}", p),
@@ -57,4 +58,4 @@ const DiscardPile: React.FunctionComponent<DiscardPileProps> = (props) => {
             VisibleBuryPile => "visible_bury_pile".to_owned(),
             SharedScorePile => "shared_score_pile".to_owned(),/
 */
-export { Hand, DiscardPile };
+// export { Hand, DiscardPile };

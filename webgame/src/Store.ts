@@ -485,3 +485,8 @@ store.subscribe(() => {
   }
 });
 export type AppDispatch = typeof store.dispatch;
+
+export const ItemTypes = {
+  CARD: "card",
+  PILE: "pile",
+};

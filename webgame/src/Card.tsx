@@ -1,4 +1,6 @@
 import React from "react";
+import { useDrag } from "react-dnd";
+import { ItemTypes } from "./Store";
 
 const SUITS = ["diamonds", "clubs", "hearts", "spades"];
 const NUMBERS_TO_CARD_IMAGE: Map<number, string> = new Map([
@@ -29,6 +31,13 @@ export interface CardProps {
 }
 
 const Card: React.FunctionComponent<CardProps> = (props) => {
+  // const [{ isDragging }, drag] = useDrag({
+  // item: { type: ItemTypes.CARD },
+  //   collect: (monitor) => ({
+  //     isDragging: !!monitor.isDragging(),
+  //   }),
+  // });
+
   let name;
   let s = Math.floor(props.value / 13);
   let num = (props.value % 13) + 1;
@@ -49,6 +58,7 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
   if (props.fullSize) {
     return (
       <img
+        // ref={drag}
         className={`card ${suit} ${highlight} card-age-${props.age ?? "old"}`}
         src={"resources/" + name + ".png"}
         alt={name}
