@@ -247,7 +247,7 @@ function addCardsToPile(pile: PileState, cards: number[]): PileState {
   return result;
 }
 function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
-  console.log("before remove", pile);
+  // console.log("before remove", pile);
   let result = { ...pile };
   result.count -= cards.length;
 
@@ -291,7 +291,7 @@ function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
   // now add any remaining
 
   result.cards = sortCards(secondRound, result.orderBy);
-  console.log("after remove", result);
+  // console.log("after remove", result);
   return result;
 }
 
@@ -377,8 +377,14 @@ const message = (state: State, action: any): State => {
         game: mergedGame,
       };
     case "MoveCard":
-      console.log("move card ", data);
-      let piles: GameState["piles"] = { ...state.game?.piles };
+      console.log(
+        `move ${data.source} -> ${data.destination} ${data.cards.join(",")}`
+      );
+      let piles: GameState["piles"] = {
+        ...state.game?.piles,
+        [data.source]: { ...state.game?.piles[data.source] },
+        [data.destination]: { ...state.game?.piles[data.destination] },
+      };
       piles[data.source] = removeCardsFromPile(
         state.game?.piles[data.source] as PileState,
         data.cards
@@ -396,8 +402,12 @@ const message = (state: State, action: any): State => {
       };
 
     case "HiddenMoveCard": {
-      console.log("hidden move ", data);
-      let piles: GameState["piles"] = { ...state.game?.piles };
+      // console.log("hidden move ", data);
+      let piles: GameState["piles"] = {
+        ...state.game?.piles,
+        [data.source]: { ...state.game?.piles[data.source] },
+        [data.destination]: { ...state.game?.piles[data.destination] },
+      };
       piles[data.source].count -= data.total_cards;
       piles[data.destination].count += data.total_cards;
       return {
@@ -425,7 +435,7 @@ const rootReducer = (
   },
   action: any
 ): State => {
-  console.log("root reducer", action, state);
+  // console.log("root reducer", action, state);
   let myId;
   switch (action.type) {
     case "REDUX_WEBSOCKET::BROKEN":
