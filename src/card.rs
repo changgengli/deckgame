@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
+#[derive(Eq, PartialEq, Copy, Clone, Ord, PartialOrd, Hash)]
 pub struct Card {
     value: u8,
 }
@@ -11,6 +11,11 @@ impl Card {
             false => 52,
         };
         (0..cards).map(|y: u8| Card { value: y }).collect()
+    }
+}
+impl fmt::Debug for Card {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.serialize_u8(self.value)
     }
 }
 

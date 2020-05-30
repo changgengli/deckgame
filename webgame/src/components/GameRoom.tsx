@@ -288,19 +288,19 @@ const Me: React.FunctionComponent<{
 const GameRoom: React.FunctionComponent<{
   game: GameState;
 }> = ({ game }) => {
-  const [id, setId] = useState("");
+  const [_id, setId] = useState("");
+
+  let players = game.players.map((_player, index) =>
+    index !== game.position ? (
+      <GamePlayerContainer key={`game-player-${index}`} position={index} />
+    ) : null
+  );
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="game-window">
         <div className="game-room-outer">
           <div className="game-room">
-            <div className="player-list">
-              {game.players
-                .filter((_, index) => index !== game.position)
-                .map((player, index) => {
-                  return <GamePlayerContainer position={index} />;
-                })}
-            </div>
+            <div className="player-list">{players}</div>
             <div className="center">
               <VisiblePileContainer title="得分" name="shared_score_pile" />
               <HiddenPileContainer title="底牌" name="reserved_pile" />

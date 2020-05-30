@@ -205,7 +205,7 @@ function getPileOrderBy(name: string): PileState["orderBy"] {
 function merge(gameState: GameState | undefined, data: FullGame): GameState {
   let piles: GameState["piles"] = Object.fromEntries(
     Object.entries(data.piles_cards).map(([name, cards]) => {
-      console.log("pile ", name, ", cards count, ", data.card_counts[name]);
+      // console.log("pile ", name, ", cards count, ", data.card_counts[name]);
       return [
         name,
         {
@@ -297,7 +297,7 @@ function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
 
 const message = (state: State, action: any): State => {
   let data = JSON.parse(action.payload.message);
-  console.log("message", data);
+  // console.log("message", data);
   switch (data.type) {
     case "LoginSuccess":
       return { ...state, myId: data.id, login: {} };
@@ -377,6 +377,7 @@ const message = (state: State, action: any): State => {
         game: mergedGame,
       };
     case "MoveCard":
+      console.log("move card ", data);
       let piles: GameState["piles"] = { ...state.game?.piles };
       piles[data.source] = removeCardsFromPile(
         state.game?.piles[data.source] as PileState,
@@ -395,6 +396,7 @@ const message = (state: State, action: any): State => {
       };
 
     case "HiddenMoveCard": {
+      console.log("hidden move ", data);
       let piles: GameState["piles"] = { ...state.game?.piles };
       piles[data.source].count -= data.total_cards;
       piles[data.destination].count += data.total_cards;

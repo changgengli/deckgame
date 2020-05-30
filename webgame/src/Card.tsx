@@ -66,6 +66,7 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
         onClick={(event: React.MouseEvent<HTMLElement>) =>
           props.onClick(props.index, props.value)
         }
+        data-tooltip={props.value}
       />
     );
   } else {

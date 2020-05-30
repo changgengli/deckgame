@@ -377,10 +377,14 @@ impl Game {
         }
         let from_pile = self.pile_to_cards.get_mut(&from).unwrap();
 
-        if let Some(index) = from_pile.iter().rev().position(|&c| c == card) {
+        if let Some(index) = from_pile.iter().rev().position(|&c| {
+            println!("{:?} vs {:?}", c, card);
+            c == card
+        }) {
             // oder doesn't matter here
 
-            from_pile.swap_remove(index);
+            println!("Found index {:?}", index);
+            from_pile.swap_remove(from_pile.len() - 1 - index);
         } else {
             return Result::Err(error::GameError::InvalidCard(card));
         }
@@ -456,6 +460,7 @@ impl Game {
         from: Pile,
         to: Pile,
     ) -> error::Result<()> {
+        println!("{:?} move {:?} to {:?}", player.id, from, to);
         let cards = { self.pile_to_cards.get(&from).map(|k| k.clone()) };
         match cards {
             Some(cards) => self.player_move_cards(player, from, to, cards),
@@ -469,6 +474,11 @@ impl Game {
         to: Pile,
         cards: Vec<Card>,
     ) -> error::Result<()> {
+        println!(
+            "{:?} move {:?} to {:?}, cards: {:?}",
+            player.id, from, to, cards
+        );
+
         let position = self.get_player_position(&player) as u8;
         if !from.allow_player_move_from(position) || !to.allow_player_move_to(position) {
             return Result::Err(error::GameError::NotAllowed);
@@ -505,6 +515,7 @@ impl Game {
             }
             _ => (),
         });
+        println!("after move {:?}", self.pile_to_cards);
         Result::Ok(())
     }
 
@@ -547,6 +558,42 @@ mod tests {
     use super::*;
     use tokio::sync::mpsc;
 
+    #[test]
+    fn test_move_card_multiple_times() {
+        let mut game = Game::new(2, 1, 20);
+
+        game.shuffle();
+
+        println!(
+            "cards {:?}",
+            game.pile_to_cards.get(&Pile::DrawPile).unwrap()
+        );
+
+        for _x in 1..10 {
+            let mut rng = thread_rng();
+            let index = rng.gen_range(0, game.pile_to_cards.get(&Pile::DrawPile).unwrap().len());
+            let card = game.pile_to_cards.get(&Pile::DrawPile).unwrap()[index];
+            game.move_card(Pile::DrawPile, Pile::Hand(0), card).unwrap();
+            println!("move {:?} ", card);
+
+            println!(
+                " deal {:?}",
+                game.pile_to_cards.get(&Pile::DrawPile).unwrap()
+            );
+
+            println!("hand {:?}", game.pile_to_cards.get(&Pile::Hand(0)).unwrap());
+            assert!(!game
+                .pile_to_cards
+                .get(&Pile::DrawPile)
+                .unwrap()
+                .contains(&card));
+            assert!(game
+                .pile_to_cards
+                .get(&Pile::Hand(0))
+                .unwrap()
+                .contains(&card))
+        }
+    }
     #[test]
     fn test_pile_ser() {
         let pile_hand = Pile::Hand(4);
