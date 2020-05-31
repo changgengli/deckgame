@@ -11,6 +11,7 @@ import GameRoom from "./components/GameRoom";
 // import "./App.scss";
 
 import { ConnectionStatus } from "./Types";
+import ErrorWindow from "./components/ErrorWindow";
 interface GameState {
   selected_card_pile: string;
   selected_cards: number[]; //index
@@ -41,6 +42,8 @@ class Root extends Component<GameProps> {
         {this.props.connection === "connected" ? null : (
           <div className="connection-banner">Connecting to game server ...</div>
         )}
+
+        <ErrorWindow />
         <div
           style={{
             filter:

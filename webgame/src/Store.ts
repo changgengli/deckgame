@@ -4,7 +4,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
 import { ConnectionStatus, GameInHall } from "./Types";
 import { stat } from "fs";
-import { CLICK_CARD, ClickCardAction } from "./Actions";
+import { CLICK_CARD, ClickCardAction, DISMISS_ERROR } from "./Actions";
 
 interface HallState {
   players: string[];
@@ -41,6 +41,10 @@ export interface State {
   game?: GameState | undefined;
   login?: {
     errorMessage?: string | undefined;
+  };
+  error?: {
+    message: string;
+    timestamp: number;
   };
 }
 
@@ -375,6 +379,14 @@ const message = (state: State, action: any): State => {
         ...state,
         game: mergedGame,
       };
+    case "BadMessage":
+      return {
+        ...state,
+        error: {
+          message: data.message,
+          timestamp: Date.now(),
+        },
+      };
     case "MoveCard":
       console.log(
         `move ${data.source} -> ${data.destination} ${data.cards.join(",")}`
@@ -482,6 +494,10 @@ const rootReducer = (
           },
         },
       };
+    case DISMISS_ERROR:
+      let { error, ...newState } = state;
+      return newState;
+
     case "DEBUG":
       return action;
     default:

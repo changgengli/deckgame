@@ -13,6 +13,7 @@
     "@types/react": "^16.9.35",
     "@types/react-dom": "^16.9.8",
     "@types/react-redux": "^7.1.9",
+    "linked-list": "^2.1.0",
     "node-sass": "^4.14.1",
     "react": "^16.13.1",
     "react-dnd": "^10.0.2",
