@@ -8,7 +8,7 @@ $color-foreground: #191919;
 
 $hall-background: #1f4068;
 $game-table-background: #0f4c75;
-
+$gameroom-width: 1960px;
 $game-table-size: 150px;
 
 // ---- tooltip -- //
@@ -53,7 +53,7 @@ body {
   // display: inline-flex;
   margin: 12px;
   padding: 3px;
-  background-color: $color-background-secondary;
+  background-color: rgba($color: $color-background-secondary, $alpha: 0.4);
   height: $card-height + 20px;
   // width: $card-width + 20px;
   border-width: 0.5px;
@@ -62,6 +62,7 @@ body {
   font-size: 14px;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .title {
@@ -73,7 +74,8 @@ body {
 
 .card-list {
   display: grid;
-  grid: $card-height / auto;
+  grid: $card-height * 2 / auto;
+  margin-top: 4px;
   // height: $card-height + 2;
   // display: inline-block;
   // flex-direction: row;
@@ -81,32 +83,99 @@ body {
 
 .hidden-pile {
   @include pile();
+  height: $card-height * 2 + 25;
+  display: flex;
+}
+.pile-row {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.pile-row.hand-row > div:first-child {
+  width: $gameroom-width * 0.8;
+}
+.pile-row.hand-row > div:nth-child(2) {
+  width: $gameroom-width * 0.17;
+}
+
+.pile-row.discard-row > div:first-child {
+  width: $gameroom-width * 0.7;
+}
+
+.pile-row.discard-row > div:nth-child(2) {
+  width: $gameroom-width * 0.27;
+}
+
+.pile-row.shared > div:first-child {
+  width: $gameroom-width * 0.5;
+}
+
+.pile-row.shared > div:nth-child(2) {
+  width: $gameroom-width * 0.2;
+}
+
+.pile-row.shared > div:nth-child(3) {
+  width: $gameroom-width * 0.2;
+}
+
+.drag-layer {
+  // margin: 12px;
+  // padding: 3px;
+  // background-color: rgba($color: $color-background-secondary, $alpha: 0.4);
+  // height: $card-height + 20px;
+  // width: $card-width + 20px;
+  border-width: 0.5px;
+  border-style: solid;
+  border-color: $color-accent;
+  font-size: 14px;
+  display: block;
+  flex-direction: column;
+  justify-content: center;
+  // background-color: white;
 }
 
 .visible-pile {
   @include pile();
-  height: $card-height * 2 + 20;
+  height: $card-height * 2 + 25;
+  display: flex;
+  overflow: hidden;
 }
 
-.hidden-pile .card-highlight {
-  border-width: 1.5px;
-}
+// .hidden-pile .card-highlight {
+//   border-width: 1.5px;
+// }
 
-.visible-pile .card {
-  width: $card-width * 2;
-  height: $card-height * 2;
-  border-radius: $card-height / 20;
+// .hidden-pile .card {
+//   width: $card-width;
+//   height: $card-height;
+//   border-radius: $card-height / 20;
+// }
+
+.hidden-pile .title {
+  text-align: center;
+  background-color: $color-background-secondary;
+}
+.visible-pile .title {
+  text-align: center;
+  background-color: $color-background-secondary;
 }
 
 .card {
   border: $color-secondary 0.5px solid;
-  border-radius: $card-height/20;
+  border-radius: $card-height * 2/20;
   grid-area: 1 / 1 / 2 / 2;
-  width: $card-width;
-  height: $card-height;
-  // background-color: white;
-  background-blend-mode: screen;
+  width: $card-width * 2;
+  height: $card-height * 2;
+  background-color: white;
+  // background-blend-mode: screen;
 }
+
+// .card-small {
+//   width: $card-width;
+//   height: $card-height;
+//   border-radius: $card-width/20;
+// }
 
 .card-back {
   background-image: url(/resources/back.png);
@@ -115,20 +184,15 @@ body {
   background-color: $color-primary;
 }
 
-.card-age-older {
+.card-age-old {
   background-color: rgb(236, 221, 185);
 }
 
-.card-age-new {
+.card-age-older {
   background-color: rgb(173, 192, 209);
-
-  animation-name: card-old-animation;
-  animation-direction: alternate-reverse;
-  animation-duration: 1.5s;
-  animation-iteration-count: infinite;
 }
 
-.card-age-old {
+.card-age-new {
   background-color: whitesmoke;
 }
 
@@ -152,7 +216,7 @@ body {
 .game-room-outer {
   display: inline-flex;
   background-color: $color-background;
-  width: 1400px;
+  width: $gameroom-width;
   height: 1160px;
   align-items: center;
   justify-content: center;
@@ -161,8 +225,38 @@ body {
 .game-room {
   background-image: url(/table-background.jpg);
   background-repeat: repeat;
-  height: 960px;
-  width: 1200px;
+  height: 100%;
+  width: 100%;
+}
+
+.game-room .player-list {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+.me {
+  background-color: rgba($color: $color-background-secondary, $alpha: 0.5);
+}
+.me .head {
+  color: $color-accent;
+  font-size: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  background-color: rgba($color: $color-background-secondary, $alpha: 0.8);
+}
+.player {
+  margin: 10px;
+  width: 350px;
+  background-color: rgba($color: $color-background-secondary, $alpha: 0.5);
+}
+.player .head {
+  color: $color-accent;
+  font-size: 18px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  background-color: rgba($color: $color-background-secondary, $alpha: 0.8);
 }
 
 .messages {
@@ -323,17 +417,6 @@ body {
   align-items: center;
 }
 
-// .game-table .join-button {
-//   border-radius: 6px;
-//   height: 30px;
-//   vertical-align: middle;
-//   font-size: 14px;
-//   color: $color-primary;
-//   background-color: $color-background-secondary;
-//   padding: 6px;
-//   // padding-right: 10px;
-// }
-
 .connection-indicator {
   height: 24px;
   width: 24px;
@@ -451,7 +534,7 @@ body {
   width: 100%;
   height: 100%;
   font-size: 18px;
-  z-index: 10000;
+  z-index: 1000;
   display: flex;
   justify-content: center;
   align-items: center;

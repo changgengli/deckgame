@@ -30,6 +30,7 @@ export interface CardProps {
   age?: "new" | "old" | "older";
   dragging: boolean;
   pile: string; // pile name used for dragging support
+  offset: number;
 }
 
 let getNameAndSuit = function (value: number): [string, string] {
@@ -52,6 +53,10 @@ let getNameAndSuit = function (value: number): [string, string] {
 
   return [name, suit];
 };
+
+/**
+ * for drag and drop only, full size
+ */
 const SimpleCard: React.FunctionComponent<{
   index: number;
   value: number;
@@ -65,6 +70,33 @@ const SimpleCard: React.FunctionComponent<{
       style={{
         marginLeft: props.index * 25,
       }}
+    />
+  );
+};
+
+export interface SmallCardProps {
+  index: number;
+  value: number;
+  nonOverLap: number;
+  age?: "new" | "old" | "older";
+}
+/**
+ *
+ * for other people's visible pile, not interactive
+ * but show age
+ */
+const SmallCard: React.FunctionComponent<SmallCardProps> = (props) => {
+  let [name, suit] = getNameAndSuit(props.value);
+  // if (props.fullSize) {
+  return (
+    <img
+      className={`card ${suit} card-small card-age-${props.age ?? "older"}`}
+      src={"resources/" + name + ".png"}
+      alt={name}
+      style={{
+        marginLeft: props.index * props.nonOverLap,
+      }}
+      data-tooltip={props.value}
     />
   );
 };
@@ -89,7 +121,7 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
       src={"resources/" + name + ".png"}
       alt={name}
       style={{
-        marginLeft: props.index * props.nonOverLap,
+        marginLeft: (props.index - props.offset) * props.nonOverLap,
         filter:
           isDragging || (props.dragging && props.highlight)
             ? "blur(1px)"
@@ -162,4 +194,4 @@ const Cardback: React.FunctionComponent<{ index: number; total: number }> = ({
     ></div>
   );
 };
-export { Card, Cardback, SimpleCard };
+export { Card, Cardback, SimpleCard, SmallCard };

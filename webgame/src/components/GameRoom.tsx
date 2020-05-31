@@ -2,7 +2,7 @@ import React, { useState, MouseEvent, useEffect } from "react";
 import { State, GameState, PileState, ItemTypes } from "../Store";
 import { connect } from "react-redux";
 import { send } from "@giantmachines/redux-websocket";
-import { Card, CardProps, Cardback, SimpleCard } from "../Card";
+import { Card, CardProps, Cardback, SimpleCard, SmallCard } from "../Card";
 import { CLICK_CARD, ClickCardAction } from "../Actions";
 import {
   DndProvider,
@@ -23,6 +23,33 @@ type MoveCard = (
   destination: string,
   cards: number[] | undefined
 ) => void;
+
+const animalIcons = [
+  "🐣",
+  "🐺",
+  "🦄",
+  "🐮",
+  "🐷",
+  "🐭",
+  "🐹",
+  "🐰",
+  "🐼",
+  "🦇",
+  "🦒",
+  "🐶",
+  "🐵",
+  "🐞",
+];
+const OtherPlayerHiddenPile: React.FunctionComponent<{
+  title: string;
+  count: number;
+}> = ({ title, count }) => {
+  return count === 0 ? null : (
+    <div className="other-player-pile-title">
+      {title}·{count}
+    </div>
+  );
+};
 
 const HiddenPile: React.FunctionComponent<{
   pile: PileState;
@@ -98,6 +125,7 @@ interface PileProps {
   clickCard: ClickPileCard;
   title: string;
   onMoveCard: MoveCard;
+  maxCards?: number;
 }
 
 interface CustomDragLayerProps {}
@@ -133,7 +161,6 @@ export const CustomDragLayer: React.FC<CustomDragLayerProps> = (props) => {
     }px, ${y}px)`;
     return {
       transform,
-      // backgroundColor: "white",
       WebkitTransform: transform,
       position: "fixed",
       display: "inline-block",
@@ -172,7 +199,7 @@ export const CustomDragLayer: React.FC<CustomDragLayerProps> = (props) => {
     return null;
   }
   return (
-    <div style={layerStyles} className="visible-pile">
+    <div style={layerStyles} className="drag-layer">
       <div style={getItemStyles(initialOffset, currentOffset)}>
         {renderItem()}
       </div>
@@ -180,11 +207,43 @@ export const CustomDragLayer: React.FC<CustomDragLayerProps> = (props) => {
   );
 };
 
+const OtherPlayerVisiblePile: React.FunctionComponent<{
+  pile: PileState;
+  title: string;
+}> = ({ pile, title }) => {
+  let timestamps = [...new Set(pile.cards)]
+    .map((c) => c.timestamp)
+    .sort()
+    .reverse();
+  return (
+    <div className="visible-pile">
+      <div className="title">{title}</div>
+      <div className="card-list">
+        {pile.cards.map((c, i) => (
+          <SmallCard
+            key={`${pile.name}-${i}`}
+            index={i}
+            value={c.value}
+            age={
+              c.timestamp === timestamps[0]
+                ? "new"
+                : timestamps.length > 1 && c.timestamp === timestamps[1]
+                ? "old"
+                : "older"
+            }
+            nonOverLap={22}
+          ></SmallCard>
+        ))}
+      </div>
+    </div>
+  );
+};
 const VisiblePile: React.FunctionComponent<PileProps> = ({
   pile,
   clickCard,
   title,
   onMoveCard,
+  maxCards,
 }) => {
   const [{ isOver }, drop] = useDrop({
     accept: [ItemTypes.PILE, ItemTypes.CARD],
@@ -235,20 +294,26 @@ const VisiblePile: React.FunctionComponent<PileProps> = ({
     .map((c) => c.timestamp)
     .sort()
     .reverse();
-
   return (
-    <>
-      <div ref={drop}>
-        <div
-          className="visible-pile"
-          ref={dragRef}
-          style={{
-            filter: isOver ? "sepia(0.5)" : "none",
-          }}
-        >
-          <div className="tile">{title}</div>
-          <div className="card-list">
-            {pile.cards.map((c, i) => (
+    <div ref={drop}>
+      <div
+        className="visible-pile"
+        ref={dragRef}
+        style={{
+          filter: isOver ? "sepia(0.5)" : "none",
+        }}
+      >
+        <div className="title">{title}</div>
+        <div className="card-list">
+          {pile.cards.map((c, i) => {
+            let offset =
+              maxCards !== undefined && pile.cards.length > maxCards
+                ? pile.cards.length - maxCards
+                : 0;
+            if (i < offset) {
+              return null;
+            }
+            return (
               <Card
                 key={`${pile.name}-${i}`}
                 index={i}
@@ -266,12 +331,13 @@ const VisiblePile: React.FunctionComponent<PileProps> = ({
                     ? "old"
                     : "older"
                 }
+                offset={offset}
               ></Card>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 interface GamePlayerProps {
@@ -290,61 +356,44 @@ const GamePlayer: React.FunctionComponent<GamePlayerProps> = (
   const center = 320;
 
   let relativePostion = props.position - props.currentPlayerPosition;
-
   if (relativePostion < 0) {
     relativePostion += props.totalPlayer;
   }
-
   relativePostion = relativePostion - 1;
 
-  const xCenter =
-    Math.sin((Math.PI / props.totalPlayer) * relativePostion) * radius + center;
-  const yCenter =
-    -1 * Math.cos((Math.PI / props.totalPlayer) * relativePostion) * radius +
-    center;
-
-  //size of player avatar
-  const xSide = 40;
-  const ySide = 40;
-  const x = xCenter - xSide / 2;
-  const y = yCenter - ySide / 2;
-
-  const style = { top: x, left: y };
-  let className = "player";
+  const style = { order: relativePostion };
+  // let className = "player";
   let player = props.player ?? "<disconnected>";
   let position = props.position;
   return (
-    <div className={className} style={style}>
+    <div className="player" style={style}>
       <div className="head">
-        <div className="avatar" />
-        <div className="name">
-          {player}-{props.position}
+        <div>{position}</div>
+        <div className="avatar">
+          {animalIcons[position % animalIcons.length]}
         </div>
+        <div className="name">{player}</div>
         <div className="check">
           {props.readyForNextGame ? <span>☑</span> : <span>▶</span>}
         </div>
-      </div>
-      <div className="piles">
-        <HiddenPileContainer
-          title={`${player}·手牌`}
+        <OtherPlayerHiddenPileContainer
+          title={`手牌`}
           name={`hand#${position}`}
         />
-
-        <VisiblePileContainer
-          title={`${player}·得分`}
-          name={`score_pile#${position}`}
-        />
-
-        <VisiblePileContainer
-          title={`${player}·出牌`}
-          name={`discard_pile#${position}`}
-        />
-
-        <HiddenPileContainer
-          title={`${player}·扣牌`}
+        <OtherPlayerHiddenPileContainer
+          title={`扣牌`}
           name={`hidden_bury_pile#${position}`}
         />
       </div>
+      <OtherPlayerVisiblePileContainer
+        title={`得分`}
+        name={`score_pile#${position}`}
+      />
+      <VisiblePileContainer
+        title={`出牌`}
+        name={`discard_pile#${position}`}
+        maxCards={12}
+      />
     </div>
   );
 };
@@ -356,34 +405,45 @@ const Me: React.FunctionComponent<{
   readyForNextGame: boolean;
 }> = ({ onClickReady, name, readyForNextGame, position }) => {
   return (
-    <div className={`me`}>
+    <div className="me">
       <div className="head">
-        <div className="avatar" onClick={onClickReady} />
-        <div className="name" onClick={onClickReady}>
-          {name}
+        <span className="arrow">▼</span>
+        <div className="avatar">
+          {animalIcons[position % animalIcons.length]}
         </div>
+        <div className="name">{name}</div>
         <div className="check" onClick={onClickReady}>
           {readyForNextGame ? (
             <span data-tooltip="Waiting for other players to start">☑</span>
           ) : (
-            <span data-tooltip="Click to start next game">▶</span>
+            <div style={{ cursor: "pointer" }}>
+              Click to start next game
+              <span className="arrow" style={{ padding: "20px" }}>
+                ▶
+              </span>
+            </div>
           )}
         </div>
+        <span className="arrow">▼</span>
       </div>
       <div className="piles">
-        <VisiblePileContainer title={`手牌`} name={`hand#${position}`} />
-
-        <VisiblePileContainer title={`得分`} name={`score_pile#${position}`} />
-
-        <VisiblePileContainer
-          title={`出牌`}
-          name={`discard_pile#${position}`}
-        />
-
-        <HiddenPileContainer
-          title={`扣牌`}
-          name={`hidden_bury_pile#${position}`}
-        />
+        <div className="pile-row discard-row">
+          <VisiblePileContainer
+            title={`出牌`}
+            name={`discard_pile#${position}`}
+          />
+          <VisiblePileContainer
+            title={`得分`}
+            name={`score_pile#${position}`}
+          />
+        </div>
+        <div className="pile-row hand-row">
+          <VisiblePileContainer title={`手牌`} name={`hand#${position}`} />
+          <HiddenPileContainer
+            title={`扣牌`}
+            name={`hidden_bury_pile#${position}`}
+          />
+        </div>
       </div>
     </div>
   );
@@ -405,10 +465,10 @@ const GameRoom: React.FunctionComponent<{
           <div className="game-room">
             <CustomDragLayer />
             <div className="player-list">{players}</div>
-            <div className="center">
+            <div className="pile-row shared">
               <VisiblePileContainer title="得分" name="shared_score_pile" />
-              <HiddenPileContainer title="底牌" name="reserved_pile" />
               <HiddenPileContainer title="牌堆" name="draw_pile" />
+              <HiddenPileContainer title="底牌" name="reserved_pile" />
             </div>
             <MeContainer />
           </div>
@@ -418,6 +478,15 @@ const GameRoom: React.FunctionComponent<{
     </DndProvider>
   );
 };
+
+const OtherPlayerVisiblePileContainer = connect(
+  (state: State, props: { name: string; title: string }) => {
+    return {
+      title: props.title,
+      pile: state.game?.piles[props.name] as PileState,
+    };
+  }
+)(OtherPlayerVisiblePile);
 
 const VisiblePileContainer = connect(
   (state: State, props: { name: string; title: string }) => {
@@ -458,6 +527,15 @@ const VisiblePileContainer = connect(
     };
   }
 )(VisiblePile);
+
+const OtherPlayerHiddenPileContainer = connect(
+  (state: State, props: { title: string; name: string }) => {
+    return {
+      title: props.title,
+      count: state.game?.piles[props.name].count ?? 0,
+    };
+  }
+)(OtherPlayerHiddenPile);
 
 const HiddenPileContainer = connect(
   (state: State, props: { name: string; title: string }) => {
