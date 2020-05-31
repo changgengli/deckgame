@@ -93,6 +93,7 @@ body {
   width: $card-width;
   height: $card-height;
   background-color: white;
+  background-blend-mode: screen;
 }
 
 .card-back {
@@ -100,6 +101,30 @@ body {
 }
 .card-highlight {
   background-color: $color-primary;
+}
+
+.card-age-older {
+  background-color: rgb(236, 221, 185);
+}
+
+.card-age-new {
+  background-color: rgb(173, 192, 209);
+
+  animation-name: card-old-animation;
+  animation-direction: alternate-reverse;
+  animation-duration: 1.5s;
+  animation-iteration-count: infinite;
+}
+
+@keyframes card-new-animation {
+  from {
+  }
+  to {
+  }
+}
+
+.card-age-old {
+  background-color: whitesmoke;
 }
 
 .visible-pile .card-highlight {

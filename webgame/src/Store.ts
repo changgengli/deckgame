@@ -291,7 +291,6 @@ function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
   // now add any remaining
 
   result.cards = sortCards(secondRound, result.orderBy);
-  // console.log("after remove", result);
   return result;
 }
 

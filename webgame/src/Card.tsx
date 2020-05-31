@@ -1,5 +1,5 @@
 import React from "react";
-import { useDrag } from "react-dnd";
+import { useDrag, ConnectDragSource } from "react-dnd";
 import { ItemTypes } from "./Store";
 
 const SUITS = ["diamonds", "clubs", "hearts", "spades"];
@@ -10,15 +10,15 @@ const NUMBERS_TO_CARD_IMAGE: Map<number, string> = new Map([
   [13, "king"],
 ]);
 
-const NUMBERS_TO_CARD_CHAR = new Map([
-  [1, "A"],
-  [11, "J"],
-  [12, "Q"],
-  [13, "K"],
-]);
+// const NUMBERS_TO_CARD_CHAR = new Map([
+//   [1, "A"],
+//   [11, "J"],
+//   [12, "Q"],
+//   [13, "K"],
+// ]);
 
-const SUITS_UNICODE = ["♦", "♣", "♥", "♠"];
-const CARD_BACK = "🂠";
+// const SUITS_UNICODE = ["♦", "♣", "♥", "♠"];
+// const CARD_BACK = "🂠";
 
 export interface CardProps {
   index: number;
@@ -28,24 +28,18 @@ export interface CardProps {
   fullSize: boolean;
   nonOverLap: number;
   age?: "new" | "old" | "older";
+  dragging: boolean;
+  pile: string; // pile name used for dragging support
 }
 
-const Card: React.FunctionComponent<CardProps> = (props) => {
-  // const [{ isDragging }, drag] = useDrag({
-  // item: { type: ItemTypes.CARD },
-  //   collect: (monitor) => ({
-  //     isDragging: !!monitor.isDragging(),
-  //   }),
-  // });
-
-  let name;
-  let s = Math.floor(props.value / 13);
-  let num = (props.value % 13) + 1;
-  let highlight = props.highlight ? "card-highlight" : "";
-  let suit;
-  if (props.value === 53) {
+let getNameAndSuit = function (value: number): [string, string] {
+  let name: string;
+  let s = Math.floor(value / 13);
+  let num = (value % 13) + 1;
+  let suit: string;
+  if (value === 53) {
     suit = name = "red_joker";
-  } else if (props.value === 52) {
+  } else if (value === 52) {
     suit = name = "black_joker";
   } else {
     suit = SUITS[s];
@@ -55,51 +49,91 @@ const Card: React.FunctionComponent<CardProps> = (props) => {
       "_of_" +
       suit;
   }
-  if (props.fullSize) {
-    return (
-      <img
-        // ref={drag}
-        className={`card ${suit} ${highlight} card-age-${props.age ?? "old"}`}
-        src={"resources/" + name + ".png"}
-        alt={name}
-        style={{ marginLeft: props.index * props.nonOverLap }}
-        onClick={(event: React.MouseEvent<HTMLElement>) =>
-          props.onClick(props.index, props.value)
-        }
-        data-tooltip={props.value}
-      />
-    );
-  } else {
-    let unicode: string;
-    let value: string;
-    let css;
-    if (name === "red_joker") {
-      value = unicode = "🂿";
-      css = "red_joker";
-    } else if (name === "black_joker") {
-      value = unicode = "🂿";
-      css = "black_joker";
-    } else {
-      css = SUITS[s].toLowerCase();
-      if (NUMBERS_TO_CARD_CHAR.has(num)) {
-        unicode = SUITS_UNICODE[s];
-        value = "" + NUMBERS_TO_CARD_CHAR.get(num);
-      } else {
-        unicode = SUITS_UNICODE[s];
-        value = (props.value % 13) + 1 + "";
+
+  return [name, suit];
+};
+const SimpleCard: React.FunctionComponent<{
+  index: number;
+  value: number;
+}> = (props: { index: number; value: number }) => {
+  let [name, suit] = getNameAndSuit(props.value);
+  return (
+    <img
+      className={`card ${suit}  "older"}`}
+      src={"resources/" + name + ".png"}
+      alt={name}
+      style={{
+        marginLeft: props.index * 25,
+      }}
+    />
+  );
+};
+const Card: React.FunctionComponent<CardProps> = (props) => {
+  const [{ isDragging }, drag] = useDrag({
+    item: {
+      type: ItemTypes.CARD,
+      pile: { name: props.pile, cards: [props.value] },
+    },
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+    canDrag: () => !props.highlight,
+  });
+  let highlight = props.highlight ? "card-highlight" : "";
+  let [name, suit] = getNameAndSuit(props.value);
+  // if (props.fullSize) {
+  return (
+    <img
+      ref={drag}
+      className={`card ${suit} ${highlight} card-age-${props.age ?? "older"}`}
+      src={"resources/" + name + ".png"}
+      alt={name}
+      style={{
+        marginLeft: props.index * props.nonOverLap,
+        filter:
+          isDragging || (props.dragging && props.highlight)
+            ? "blur(1px)"
+            : "none",
+      }}
+      onClick={(event: React.MouseEvent<HTMLElement>) =>
+        props.onClick(props.index, props.value)
       }
-    }
-    return (
-      <div
-        className={`${css} card-small ${highlight} card-age-${
-          props.age ?? "old"
-        }`}
-      >
-        <div>{value}</div>
-        <div>{unicode}</div>
-      </div>
-    );
-  }
+      data-tooltip={props.value}
+    />
+  );
+  // }
+
+  // else {
+  //   let unicode: string;
+  //   let value: string;
+  //   let css;
+  //   if (name === "red_joker") {
+  //     value = unicode = "🂿";
+  //     css = "red_joker";
+  //   } else if (name === "black_joker") {
+  //     value = unicode = "🂿";
+  //     css = "black_joker";
+  //   } else {
+  //     css = SUITS[s].toLowerCase();
+  //     if (NUMBERS_TO_CARD_CHAR.has(num)) {
+  //       unicode = SUITS_UNICODE[s];
+  //       value = "" + NUMBERS_TO_CARD_CHAR.get(num);
+  //     } else {
+  //       unicode = SUITS_UNICODE[s];
+  //       value = (props.value % 13) + 1 + "";
+  //     }
+  //   }
+  // return (
+  //   <div
+  //     className={`${css} card-small ${highlight} card-age-${
+  //       props.age ?? "old"
+  //     }`}
+  //   >
+  //     <div>{value}</div>
+  //     <div>{unicode}</div>
+  //   </div>
+  // );
+  // }
 };
 
 function calculateMargin(index: number, total: number, margin: number): number {
@@ -128,4 +162,4 @@ const Cardback: React.FunctionComponent<{ index: number; total: number }> = ({
     ></div>
   );
 };
-export { Card, CARD_BACK, Cardback };
+export { Card, Cardback, SimpleCard };
