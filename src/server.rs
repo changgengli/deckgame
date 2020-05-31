@@ -5,10 +5,12 @@ use crate::player;
 use crate::session::*;
 use futures_util::future::FutureExt;
 use futures_util::stream::StreamExt;
-use std::sync::Arc;
+use std::env;
+use std::{net::SocketAddr, sync::Arc};
 use tokio::sync::{mpsc, RwLock};
 use warp::ws::{Message, WebSocket};
 use warp::{http::Method, Filter};
+
 type Hall = Arc<RwLock<hall::Hall>>;
 type TX = mpsc::UnboundedSender<Result<Message, warp::Error>>;
 
@@ -155,8 +157,8 @@ pub async fn start_server() {
 
     let hall = Arc::new(RwLock::new(hall::Hall::new()));
     let hall = warp::any().map(move || hall.clone());
-    let cors = warp::cors().allow_methods(&[Method::GET, Method::POST, Method::DELETE]);
-    let cors = warp::any().map(warp::reply).with(cors);
+    // let cors = warp::cors().allow_methods(&[Method::GET, Method::POST, Method::DELETE]);
+    // let cors = warp::any().map(warp::reply).with(cors);
 
     let websocket = warp::path("websocket")
         .and(warp::ws())
@@ -164,10 +166,13 @@ pub async fn start_server() {
         .map(|ws: warp::ws::Ws, hall| ws.on_upgrade(move |socket| on_connected(socket, hall)));
 
     let hi = warp::path("hi").map(|| "Hello, World!");
+    let port = env::var("PORT").unwrap_or("".to_owned()).parse::<u16>();
 
-    warp::serve(hi.or(websocket).or(cors))
-        .run(([127, 0, 0, 1], 3030))
-        .await;
+    let tuple: ([u8; 4], u16) = match port {
+        Ok(p) => ([0, 0, 0, 0], p),
+        _ => ([127, 0, 0, 1], 3030),
+    };
+    warp::serve(hi.or(websocket)).run(tuple).await;
 }
 
 async fn on_connected(ws: WebSocket, hall: Hall) {
