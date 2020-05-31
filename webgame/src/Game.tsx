@@ -8,6 +8,9 @@ import CurrentUser from "./components/CurrentUser";
 import LoginWindow from "./components/LoginWindow";
 import { connect as redux_connect } from "react-redux";
 import GameRoom from "./components/GameRoom";
+// import "./App.scss";
+
+import { ConnectionStatus } from "./Types";
 interface GameState {
   selected_card_pile: string;
   selected_cards: number[]; //index
@@ -27,30 +30,33 @@ interface Hall {
 interface GameProps {
   myId?: string | undefined;
   inGame: boolean;
+  connection: ConnectionStatus;
 }
 
 class Root extends Component<GameProps> {
   render() {
+    console.log(this.props);
     return (
-      <div>
-        <div id="head">
-          <Connection />
-          {this.props.myId ? <CurrentUser /> : <LoginWindow />}
+      <>
+        {this.props.connection === "connected" ? null : (
+          <div className="connection-banner">Connecting to game server ...</div>
+        )}
+        <div
+          style={{
+            filter:
+              this.props.connection === "connected"
+                ? "none"
+                : "grayscale(80%) blur(1px)",
+          }}
+        >
+          <div id="head">
+            <Connection />
+
+            {this.props.myId ? <CurrentUser /> : <LoginWindow />}
+          </div>
+          {this.props.inGame ? <GameRoom /> : this.props.myId ? <Hall /> : null}
         </div>
-        {this.props.inGame ? <GameRoom /> : this.props.myId ? <Hall /> : null}
-        {/* <Hand
-          trumpColor={undefined}
-          trumpNumber={undefined}
-          cards={Array.from(Array(54).keys())}
-          highlights={
-            new Map([
-              [0, true],
-              [9, true],
-            ])
-          }
-          onCardClick={(n) => console.log("selected " + n)}
-        /> */}
-      </div>
+      </>
     );
   }
 }
@@ -58,6 +64,7 @@ class Root extends Component<GameProps> {
 const RootContainer = redux_connect(
   (state: State): GameProps => {
     return {
+      connection: state.connection,
       myId: state.myId,
       inGame: state.game?.id !== null && state.game?.id !== undefined,
     };

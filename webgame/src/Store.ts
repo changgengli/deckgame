@@ -444,6 +444,11 @@ const rootReducer = (
         ...state,
         connection: connectionReducer(state.connection, action),
         myId,
+        game: undefined,
+        hall: {
+          players: [],
+          games: {},
+        },
       };
     case "REDUX_WEBSOCKET::OPEN":
     case "REDUX_WEBSOCKET::CONNECT":
@@ -456,6 +461,7 @@ const rootReducer = (
       return {
         ...message(state, action),
       };
+
     case CLICK_CARD:
       let a = action as ClickCardAction;
       let game = state.game as GameState;

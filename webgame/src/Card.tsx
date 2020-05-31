@@ -1,5 +1,5 @@
 import React from "react";
-import { useDrag, ConnectDragSource } from "react-dnd";
+import { useDrag } from "react-dnd";
 import { ItemTypes } from "./Store";
 
 const SUITS = ["diamonds", "clubs", "hearts", "spades"];

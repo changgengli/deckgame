@@ -26,9 +26,21 @@ body {
   font-size: 24px;
 }
 
+.connection-banner {
+  display: block;
+  position: absolute;
+  text-align: center;
+  font-size: 28px;
+  margin: 60px;
+  width: 100%;
+  filter: brightness(2);
+}
+
 .App {
   display: flex;
+  // flex-direction: column;
   justify-content: center;
+  // align-items: center;
 }
 
 .player .head {
@@ -63,7 +75,7 @@ body {
   display: grid;
   grid: $card-height / auto;
   // height: $card-height + 2;
-  // display: flex;
+  // display: inline-block;
   // flex-direction: row;
 }
 
@@ -116,13 +128,6 @@ body {
   animation-iteration-count: infinite;
 }
 
-@keyframes card-new-animation {
-  from {
-  }
-  to {
-  }
-}
-
 .card-age-old {
   background-color: whitesmoke;
 }
@@ -167,7 +172,6 @@ body {
 }
 
 .hall {
-  /* min-height: 640px; */
   background-color: $hall-background;
   width: 960px;
 }

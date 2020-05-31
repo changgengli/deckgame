@@ -119,7 +119,7 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
             if let Result::Err(e) = session.player_move_all_cards(source, destination).await {
                 return send_bad_message(&tx, e.to_string());
             }
-            send_message(&tx, &message::Response::Pong)
+            return true;
         }
 
         Result::Ok(message::Request::MoveCard {
@@ -133,7 +133,7 @@ async fn handle_message(msg: Message, session: &mut Session, tx: &TX) -> bool {
             if let Result::Err(e) = session.player_move_cards(source, destination, cards).await {
                 return send_bad_message(&tx, e.to_string());
             }
-            send_message(&tx, &message::Response::Pong)
+            return true;
         }
         Result::Ok(message::Request::Game) => {
             if !session.is_in_game() {

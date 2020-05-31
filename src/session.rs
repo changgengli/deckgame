@@ -117,7 +117,7 @@ impl Session {
                     Result::Ok(_) => {
                         self.game.replace(game_ref.clone());
                         hall.broadcast_game(&game);
-                        return send_message(&tx, &message::Response::Pong);
+                        return true;
                     }
                     Result::Err(_e) => {
                         return send_bad_message(&tx, "position occupied".to_string());
