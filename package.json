@@ -1,0 +1,10 @@
+{
+  "name": "buildweb",
+  "version": "1.0.0",
+  "scripts": {
+    "postinstall": "npm install --prefix webgame  && cd webgame && npm run build"
+  },
+  "cacheDirectories": [
+    "webgame/node_modules"
+  ]
+}

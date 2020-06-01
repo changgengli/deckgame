@@ -165,6 +165,14 @@ pub async fn start_server() {
         .and(hall)
         .map(|ws: warp::ws::Ws, hall| ws.on_upgrade(move |socket| on_connected(socket, hall)));
 
+    let mut path = env::current_dir().unwrap();
+    path.push("webgame");
+    path.push("build");
+    let web_path = path.to_owned();
+
+    println!("Using web for {:?}", path);
+    // let files = warp::path("web").and(warp::fs::dir(web_path));
+    let files = warp::fs::dir(web_path);
     let hi = warp::path("hi").map(|| "Hello, World!");
     let port = env::var("PORT").unwrap_or("".to_owned()).parse::<u16>();
 
@@ -172,7 +180,7 @@ pub async fn start_server() {
         Ok(p) => ([0, 0, 0, 0], p),
         _ => ([127, 0, 0, 1], 3030),
     };
-    warp::serve(hi.or(websocket)).run(tuple).await;
+    warp::serve(hi.or(websocket).or(files)).run(tuple).await;
 }
 
 async fn on_connected(ws: WebSocket, hall: Hall) {
