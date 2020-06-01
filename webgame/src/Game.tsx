@@ -2,7 +2,7 @@ import React, { Component, useEffect } from "react";
 import { Hall } from "./Hall";
 import { Provider } from "react-redux";
 import { store, State } from "./Store";
-import { connect } from "@giantmachines/redux-websocket/dist";
+import { connect, send } from "@giantmachines/redux-websocket/dist";
 import Connection from "./components/Connection";
 import CurrentUser from "./components/CurrentUser";
 import LoginWindow from "./components/LoginWindow";
@@ -32,44 +32,65 @@ interface GameProps {
   myId?: string | undefined;
   inGame: boolean;
   connection: ConnectionStatus;
+  ping: () => void;
 }
 
-class Root extends Component<GameProps> {
-  render() {
-    console.log(this.props);
-    return (
-      <>
-        {this.props.connection === "connected" ? null : (
-          <div className="connection-banner">Connecting to game server ...</div>
-        )}
+const Root: React.FunctionComponent<GameProps> = (props) => {
+  useEffect(() => {
+    let interval = setInterval(() => {
+      props.ping();
+    }, 15000);
+    return () => {
+      clearInterval(interval);
+    };
+  });
 
-        <ErrorWindow />
-        <div
-          style={{
-            filter:
-              this.props.connection === "connected"
-                ? "none"
-                : "grayscale(80%) blur(1px)",
-          }}
-        >
-          <div id="head">
-            <Connection />
+  console.log(props);
+  return (
+    <>
+      {props.connection === "connected" ? null : (
+        <div className="connection-banner">Connecting to game server ...</div>
+      )}
 
-            {this.props.myId ? <CurrentUser /> : <LoginWindow />}
-          </div>
-          {this.props.inGame ? <GameRoom /> : this.props.myId ? <Hall /> : null}
+      <ErrorWindow />
+      <div
+        style={{
+          filter:
+            props.connection === "connected"
+              ? "none"
+              : "grayscale(80%) blur(1px)",
+        }}
+      >
+        <div id="head">
+          <Connection />
+
+          {props.myId ? <CurrentUser /> : <LoginWindow />}
         </div>
-      </>
-    );
-  }
-}
+        {props.inGame ? <GameRoom /> : props.myId ? <Hall /> : null}
+      </div>
+    </>
+  );
+};
 
 const RootContainer = redux_connect(
-  (state: State): GameProps => {
+  (
+    state: State
+  ): {
+    myId?: string | undefined;
+    inGame: boolean;
+    connection: ConnectionStatus;
+  } => {
     return {
       connection: state.connection,
       myId: state.myId,
       inGame: state.game?.id !== null && state.game?.id !== undefined,
+    };
+  },
+  (dispatch) => {
+    return {
+      ping: () => {
+        dispatch(send({ type: "Ping" }));
+      },
     };
   }
 )(Root);
