@@ -4,7 +4,13 @@ import { configureStore } from "@reduxjs/toolkit";
 import thunk from "redux-thunk";
 import { ConnectionStatus, GameInHall } from "./Types";
 import { stat } from "fs";
-import { CLICK_CARD, ClickCardAction, DISMISS_ERROR } from "./Actions";
+import {
+  CLICK_CARD,
+  ClickCardAction,
+  DISMISS_ERROR,
+  SET_SORTER,
+  SetSorterAction,
+} from "./Actions";
 
 interface HallState {
   players: string[];
@@ -23,9 +29,81 @@ export interface PileState {
   visible: boolean;
   cards: CardState[];
   count: number;
-  sortable: boolean;
-  orderBy: "natural" | "numberThenSuit" | "suitThenNumber";
+  sorter: Sorter | undefined;
 }
+
+export interface Sorter {
+  orderBy: "natural" | "bySuit" | "byNumber";
+  trumpCard?: undefined | number;
+}
+
+function applySorter(
+  cards: CardState[],
+  sorter: Sorter | undefined
+): CardState[] {
+  if (!sorter || sorter.orderBy === "natural") {
+    return cards;
+  }
+
+  const f = function (card: CardState): number {
+    let suit = Math.floor(card.value / 13);
+    let value = card.value % 13;
+    let trumpColor = false;
+    let trumpValue = false;
+    if (
+      sorter.trumpCard !== undefined &&
+      sorter.trumpCard !== 52 &&
+      sorter.trumpCard !== 53
+    ) {
+      if (suit === Math.floor(sorter.trumpCard / 13)) {
+        trumpColor = true;
+      }
+      if (value == sorter.trumpCard % 13) {
+        trumpValue = true;
+      }
+    }
+    if (value === 0) {
+      value = 13;
+    }
+
+    switch (card.value) {
+      case 53:
+      case 52:
+        return card.value * 100;
+      default:
+        if (trumpColor) {
+          value = value + 100;
+          if (trumpValue) {
+            value = value + 200;
+          }
+          return value;
+        } else if (trumpValue) {
+          return value + 150 + suit;
+        }
+        return suit * 13 + value;
+    }
+  };
+
+  function nf(x: CardState): number {
+    switch (x.value) {
+      case 52:
+        return 52;
+      case 53:
+        return 53;
+      default:
+        return x.value % 13;
+    }
+  }
+  cards.sort((a, b): number => {
+    if (sorter.orderBy === "byNumber") {
+      return nf(a) - nf(b);
+    } else {
+      return f(a) - f(b);
+    }
+  });
+  return cards;
+}
+
 export interface GameState {
   position: number;
   id: number;
@@ -80,37 +158,37 @@ interface FullGame {
   players_ready: boolean[];
 }
 
-function sortCards(
-  cards: CardState[],
-  orderBy: PileState["orderBy"]
-): CardState[] {
-  if (orderBy === "natural") {
-    return cards;
-  }
-  /*  let s = Math.floor(props.value / 13);
-  let num = (props.value % 13) + 1;
-  let highlight = props.highlight ? "card-highlight" : "";
-  let suit;
-  if (props.value === 53) {
-    suit = name = "red_joker";
-  } else if (props.value === 52) {
-    suit = name = "black_joker";
-*/
-  cards.sort((a, b): number => {
-    if (orderBy === "suitThenNumber") {
-      return a.value - b.value;
-    } else {
-      let r = Math.floor(a.value / 13) - Math.floor(b.value / 13);
-      return r !== 0 ? r : (a.value % 13) - (b.value % 13);
-    }
-  });
-  return cards;
-}
+// function sortCards(
+//   cards: CardState[],
+//   orderBy: PileState["orderBy"]
+// ): CardState[] {
+//   if (orderBy === "natural") {
+//     return cards;
+//   }
+//   /*  let s = Math.floor(props.value / 13);
+//   let num = (props.value % 13) + 1;
+//   let highlight = props.highlight ? "card-highlight" : "";
+//   let suit;
+//   if (props.value === 53) {
+//     suit = name = "red_joker";
+//   } else if (props.value === 52) {
+//     suit = name = "black_joker";
+// */
+//   cards.sort((a, b): number => {
+//     if (orderBy === "suitThenNumber") {
+//       return a.value - b.value;
+//     } else {
+//       let r = Math.floor(a.value / 13) - Math.floor(b.value / 13);
+//       return r !== 0 ? r : (a.value % 13) - (b.value % 13);
+//     }
+//   });
+//   return cards;
+// }
 
 function mergeCards(
   cards: number[],
   existingCards: CardState[] | undefined,
-  orderBy: PileState["orderBy"]
+  sorter: PileState["sorter"]
 ): CardState[] {
   if (!existingCards) {
     return cards.map((c) => {
@@ -181,31 +259,18 @@ function mergeCards(
         secondRound.push({ value, selected: false, timestamp: Date.now() })
       );
   });
-  return sortCards(secondRound, orderBy);
+  return applySorter(secondRound, sorter);
 }
+// function getPileOrderBy(name: string): PileState["sorter"] {
+//   let n = name.split("#")[0];
+//   switch (n) {
+//     case "hand":
+//       return "suitThenNumber";
 
-function isPileSortable(name: string): boolean {
-  let n = name.split("#")[0];
-  switch (n) {
-    case "hand":
-      return true;
-    case "discard_pile":
-      return false;
-    default:
-      return false;
-  }
-}
-
-function getPileOrderBy(name: string): PileState["orderBy"] {
-  let n = name.split("#")[0];
-  switch (n) {
-    case "hand":
-      return "suitThenNumber";
-
-    default:
-      return "natural";
-  }
-}
+//     default:
+//       return "natural";
+//   }
+// }
 function merge(gameState: GameState | undefined, data: FullGame): GameState {
   let piles: GameState["piles"] = Object.fromEntries(
     Object.entries(data.piles_cards).map(([name, cards]) => {
@@ -223,10 +288,9 @@ function merge(gameState: GameState | undefined, data: FullGame): GameState {
               : mergeCards(
                   cards,
                   gameState?.piles[name]?.cards,
-                  gameState?.piles[name]?.orderBy ?? "natural"
+                  gameState?.piles[name]?.sorter
                 ),
-          sortable: isPileSortable(name),
-          orderBy: gameState?.piles[name]?.orderBy ?? getPileOrderBy(name),
+          sorter: gameState?.piles[name]?.sorter,
         },
       ];
     })
@@ -247,7 +311,7 @@ function addCardsToPile(pile: PileState, cards: number[]): PileState {
   cards.forEach((c) =>
     result.cards.push({ value: c, selected: false, timestamp: Date.now() })
   );
-  sortCards(result.cards, pile.orderBy);
+  applySorter(result.cards, pile.sorter);
   return result;
 }
 function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
@@ -294,7 +358,7 @@ function removeCardsFromPile(pile: PileState, cards: number[]): PileState {
   secondRound = secondRound.reverse();
   // now add any remaining
 
-  result.cards = sortCards(secondRound, result.orderBy);
+  result.cards = applySorter(secondRound, result.sorter);
   return result;
 }
 
@@ -472,6 +536,24 @@ const rootReducer = (
     case "REDUX_WEBSOCKET::MESSAGE":
       return {
         ...message(state, action),
+      };
+    case SET_SORTER:
+      let g = state.game as GameState;
+      let aa = action as SetSorterAction;
+      return {
+        ...state,
+        game: {
+          ...g,
+          piles: {
+            ...g.piles,
+
+            [aa.pile]: {
+              ...(g.piles[aa.pile] as PileState),
+              cards: applySorter(g.piles[aa.pile].cards, aa.sorter),
+              sorter: aa.sorter,
+            },
+          },
+        },
       };
 
     case CLICK_CARD:

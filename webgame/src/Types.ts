@@ -28,3 +28,7 @@ export interface HallProps {
   joinGame: (request: JoinGameRequest) => void;
   leaveGame: () => void;
 }
+export interface PileDragState {
+  name: string;
+  cards: number[] | undefined;
+}

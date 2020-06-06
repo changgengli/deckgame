@@ -179,6 +179,7 @@ body {
 
 .card-back {
   background-image: url(/resources/back.png);
+  background-color: steelblue;
 }
 .card-highlight {
   background-color: $color-primary;
@@ -580,4 +581,28 @@ input {
   margin: 6px;
   background-color: $color-background-secondary;
   color: $color-accent;
+}
+
+.sorter-window > div {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: center;
+  width: 75%;
+  margin-top: 10px;
+}
+
+.sorter-window {
+  align-content: center;
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  background-color: $color-background-secondary;
 }

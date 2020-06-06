@@ -1,8 +1,8 @@
-import React, { useState, MouseEvent, useEffect } from "react";
-import { State, GameState, PileState, ItemTypes } from "../Store";
+import React, { useState, useEffect } from "react";
+import { State, GameState, PileState, ItemTypes, Sorter } from "../Store";
 import { connect } from "react-redux";
 import { send } from "@giantmachines/redux-websocket";
-import { Card, CardProps, Cardback, SimpleCard, SmallCard } from "../Card";
+import { Card, Cardback, SimpleCard, SmallCard } from "../Card";
 import { CLICK_CARD, ClickCardAction } from "../Actions";
 import {
   DndProvider,
@@ -13,10 +13,9 @@ import {
   XYCoord,
 } from "react-dnd";
 import HTML5Backend, { getEmptyImage } from "react-dnd-html5-backend";
-interface PileDragState {
-  name: string;
-  cards: number[] | undefined;
-}
+import { PileDragState } from "../Types";
+import SorterComponent from "./SorterComponent";
+
 type ClickPileCard = (pile: string, index: number, value: number) => void;
 type MoveCard = (
   source: string,
@@ -238,6 +237,7 @@ const OtherPlayerVisiblePile: React.FunctionComponent<{
     </div>
   );
 };
+
 const VisiblePile: React.FunctionComponent<PileProps> = ({
   pile,
   clickCard,
@@ -342,6 +342,7 @@ const VisiblePile: React.FunctionComponent<PileProps> = ({
     </div>
   );
 };
+
 interface GamePlayerProps {
   player: string | undefined;
   position: number;
@@ -426,6 +427,8 @@ const Me: React.FunctionComponent<{
             </div>
           )}
         </div>
+
+        <SorterComponent pile={`hand#${position}`} />
         <span className="arrow">▼</span>
       </div>
       <div className="piles">

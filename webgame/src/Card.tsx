@@ -10,16 +10,29 @@ const NUMBERS_TO_CARD_IMAGE: Map<number, string> = new Map([
   [13, "king"],
 ]);
 
-// const NUMBERS_TO_CARD_CHAR = new Map([
-//   [1, "A"],
-//   [11, "J"],
-//   [12, "Q"],
-//   [13, "K"],
-// ]);
+const NUMBERS_TO_CARD_CHAR = new Map([
+  [0, "A"],
+  [10, "J"],
+  [11, "Q"],
+  [12, "K"],
+]);
 
-// const SUITS_UNICODE = ["♦", "♣", "♥", "♠"];
+const SUITS_UNICODE = ["♦", "♣", "♥", "♠"];
 // const CARD_BACK = "🂠";
-
+export function getCardShortString(value: number): string {
+  if (value === 52 || value === 53) {
+    return "🂿";
+  }
+  let unicode;
+  let s = Math.floor(value / 13);
+  let v = Math.floor(value % 13);
+  if (NUMBERS_TO_CARD_CHAR.has(v)) {
+    unicode = SUITS_UNICODE[s] + "" + NUMBERS_TO_CARD_CHAR.get(v);
+  } else {
+    unicode = SUITS_UNICODE[s] + "" + (v + 1);
+  }
+  return unicode;
+}
 export interface CardProps {
   index: number;
   value: number;
@@ -70,6 +83,19 @@ const SimpleCard: React.FunctionComponent<{
       style={{
         marginLeft: props.index * 25,
       }}
+    />
+  );
+};
+
+const DumbCard: React.FunctionComponent<{
+  value: number;
+}> = (props: { value: number }) => {
+  let [name, suit] = getNameAndSuit(props.value);
+  return (
+    <img
+      className={`card ${suit} dumb}`}
+      src={"resources/" + name + ".png"}
+      alt={name}
     />
   );
 };
@@ -194,4 +220,4 @@ const Cardback: React.FunctionComponent<{ index: number; total: number }> = ({
     ></div>
   );
 };
-export { Card, Cardback, SimpleCard, SmallCard };
+export { Card, Cardback, SimpleCard, SmallCard, DumbCard };
