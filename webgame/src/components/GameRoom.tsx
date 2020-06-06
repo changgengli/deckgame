@@ -282,8 +282,10 @@ const VisiblePile: React.FunctionComponent<PileProps> = ({
     // end: (item: { type: string; pile: PileState } | undefined, monitor) => {
     //   console.log("end dragging", item);
     // },
-    canDrag: (monitor) =>
-      pile.cards.map((c) => c.selected).find((x) => x) !== undefined,
+
+    canDrag: (
+      monitor //if at least one card is selected
+    ) => pile.cards.map((c) => c.selected).find((x) => x) !== undefined,
   });
 
   useEffect(() => {
